@@ -7,6 +7,8 @@ use App\Http\Controllers\WorkController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
+use App\Http\Controllers\DashboardController;
+
 Route::get('/', function () {
     return Inertia::render('Welcome');
 });
@@ -16,7 +18,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         return Inertia::render('Dashboard');
     })->name('dashboard');
     Route::get('/budgets/{budget}/pdf', [BudgetController::class, 'downloadPdf'])->name('budgets.pdf');
-
+    Route::get('/dashboard', DashboardController::class)->name('dashboard');
     // Módulos principales OficioApp
     Route::resource('works', WorkController::class);
     Route::resource('resources', ResourceController::class)->only(['index', 'store', 'update', 'destroy']);
