@@ -2,62 +2,60 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\ProfileUpdateRequest;
-use Illuminate\Contracts\Auth\MustVerifyEmail;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Redirect;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class ProfileController extends Controller
 {
-    /**
-     * Display the user's profile form.
-     */
     public function edit(Request $request): Response
     {
+        $user = $request->user()->load('profile');
+
         return Inertia::render('Profile/Edit', [
-            'mustVerifyEmail' => $request->user() instanceof MustVerifyEmail,
-            'status' => session('status'),
+            'profile' => $user->profile,
         ]);
     }
 
-    /**
-     * Update the user's profile information.
-     */
-    public function update(ProfileUpdateRequest $request): RedirectResponse
+    public function updateBusiness(Request $request)
     {
-        $request->user()->fill($request->validated());
-
-        if ($request->user()->isDirty('email')) {
-            $request->user()->email_verified_at = null;
-        }
-
-        $request->user()->save();
-
-        return Redirect::route('profile.edit');
-    }
-
-    /**
-     * Delete the user's account.
-     */
-    public function destroy(Request $request): RedirectResponse
-    {
-        $request->validate([
-            'password' => ['required', 'current_password'],
+        $validated = $request->validate([
+            'business_name' => 'nullable|string|max:255',
+            'trade_category' => 'nullable|string|max:100',
+            'hourly_rate_reference' => 'nullable|numeric|min:0',
+            'currency' => 'required|string|size:3',
+            'phone' => 'nullable|string|max:50',
+            'logo' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
         ]);
 
         $user = $request->user();
 
-        Auth::logout();
+        // Actualizar teléfono en el User
+        if (isset($validated['phone'])) {
+            $user->update(['phone' => $validated['phone']]);
+        }
 
-        $user->delete();
+        $profileData = [
+            'business_name' => $validated['business_name'] ?? null,
+            'trade_category' => $validated['trade_category'] ?? null,
+            'hourly_rate_reference' => $validated['hourly_rate_reference'] ?? 0,
+            'currency' => $validated['currency'],
+        ];
 
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
+        // Manejo de la imagen de Logo
+        if ($request->hasFile('logo')) {
+            if ($user->profile && $user->profile->logo_path) {
+                Storage::disk('public')->delete($user->profile->logo_path);
+            }
+            $profileData['logo_path'] = $request->file('logo')->store('logos', 'public');
+        }
 
-        return Redirect::to('/');
+        $user->profile()->updateOrCreate(
+            ['user_id' => $user->id],
+            $profileData
+        );
+
+        return back()->with('success', 'Perfil comercial actualizado correctamente.');
     }
 }

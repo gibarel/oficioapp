@@ -11,12 +11,13 @@ class Profile extends Model
     use HasFactory;
 
     protected $fillable = [
-        'user_id',
-        'business_name',
-        'trade_category',
-        'hourly_rate_reference',
-        'currency',
-    ];
+    'user_id',
+    'business_name',
+    'trade_category',
+    'hourly_rate_reference',
+    'currency',
+    'logo_path',
+];
 
     protected $casts = [
         'hourly_rate_reference' => 'decimal:2',

@@ -22,6 +22,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard', DashboardController::class)->name('dashboard');
     Route::get('/p/presupuesto/{uuid}', [PublicBudgetController::class, 'show'])->name('public.budgets.show');
     Route::post('/p/presupuesto/{uuid}/status', [PublicBudgetController::class, 'updateStatus'])->name('public.budgets.status');
+    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::post('/profile/business', [ProfileController::class, 'updateBusiness'])->name('profile.business.update');
+});
     // Módulos principales OficioApp
     Route::resource('works', WorkController::class);
     Route::resource('resources', ResourceController::class)->only(['index', 'store', 'update', 'destroy']);
