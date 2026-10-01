@@ -1,6 +1,7 @@
 import React from 'react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, useForm } from '@inertiajs/react';
+import Badge from '@/Components/Badge';
 
 export default function Index({ auth, resources }) {
     const { data, setData, post, processing, errors, reset } = useForm({
@@ -8,11 +9,6 @@ export default function Index({ auth, resources }) {
         name: '',
         use_unit: 'unidad',
         unit_value: '',
-        purchase_unit: '',
-        conversion_factor: 1,
-        acquisition_cost: '',
-        useful_life_months: '',
-        estimated_monthly_use_hours: '',
     });
 
     const submit = (e) => {
@@ -23,137 +19,85 @@ export default function Index({ auth, resources }) {
     };
 
     return (
-        <AuthenticatedLayout user={auth.user} header={<h2 className="font-semibold text-xl text-gray-800 leading-tight">Gestión de Insumos y Recursos</h2>}>
-            <Head title="Insumos y Recursos" />
+        <AuthenticatedLayout
+            user={auth.user}
+            header={<h2 className="font-semibold text-xl text-slate-800 tracking-tight">Insumos y Recursos</h2>}
+        >
+            <Head title="Insumos" />
 
-            <div className="py-12 max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
-                {/* Formulario de Alta */}
-                <div className="p-6 bg-white shadow rounded-lg">
-                    <h3 className="text-lg font-medium text-gray-900 mb-4">Registrar Nuevo Insumo / Herramienta</h3>
-                    <form onSubmit={submit} className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="py-8 max-w-4xl mx-auto px-4 sm:px-6 space-y-6">
+                
+                {/* Alta Rápida - Estilo tarjeta limpia */}
+                <div className="bg-white rounded-2xl border border-slate-100 p-6 shadow-sm">
+                    <h3 className="text-sm font-semibold text-slate-900 mb-4 uppercase tracking-wider">
+                        + Cargar Nuevo Recurso
+                    </h3>
+                    <form onSubmit={submit} className="grid grid-cols-1 sm:grid-cols-4 gap-3">
                         <div>
-                            <label className="block text-sm font-medium text-gray-700">Tipo de Recurso</label>
                             <select
                                 value={data.type}
                                 onChange={(e) => setData('type', e.target.value)}
-                                className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
+                                className="w-full bg-slate-50 border-slate-200 text-slate-800 rounded-xl text-sm focus:ring-slate-900 focus:border-slate-900"
                             >
-                                <option value="material">Material / Insumo</option>
-                                <option value="labor">Mano de Obra</option>
-                                <option value="asset">Herramienta / Equipo Propio</option>
-                                <option value="service">Servicio / Indirecto</option>
+                                <option value="material">Material</option>
+                                <option value="labor">Mano de obra</option>
+                                <option value="asset">Herramienta</option>
+                                <option value="service">Servicio</option>
                             </select>
                         </div>
-
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700">Nombre del Insumo</label>
+                        <div className="sm:col-span-2">
                             <input
                                 type="text"
+                                placeholder="Nombre (ej: Bolsa de Cemento 50kg)"
                                 value={data.name}
                                 onChange={(e) => setData('name', e.target.value)}
-                                className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
-                                placeholder="Ej: Cable Unipolar 2.5mm / Taladro Perforador"
-                            />
-                            {errors.name && <div className="text-red-600 text-sm">{errors.name}</div>}
-                        </div>
-
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700">Unidad de Uso</label>
-                            <input
-                                type="text"
-                                value={data.use_unit}
-                                onChange={(e) => setData('use_unit', e.target.value)}
-                                className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
-                                placeholder="m, kg, hora, global"
+                                className="w-full bg-slate-50 border-slate-200 text-slate-800 rounded-xl text-sm focus:ring-slate-900 focus:border-slate-900 placeholder:text-slate-400"
                             />
                         </div>
-
                         <div>
-                            <label className="block text-sm font-medium text-gray-700">Costo Unitario Referencia</label>
                             <input
                                 type="number"
                                 step="0.01"
+                                placeholder="Precio ($)"
                                 value={data.unit_value}
                                 onChange={(e) => setData('unit_value', e.target.value)}
-                                className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
-                                placeholder="0.00"
+                                className="w-full bg-slate-50 border-slate-200 text-slate-800 rounded-xl text-sm focus:ring-slate-900 focus:border-slate-900 font-mono"
                             />
-                            {errors.unit_value && <div className="text-red-600 text-sm">{errors.unit_value}</div>}
                         </div>
-
-                        {data.type === 'asset' && (
-                            <>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700">Costo Adquisición</label>
-                                    <input
-                                        type="number"
-                                        step="0.01"
-                                        value={data.acquisition_cost}
-                                        onChange={(e) => setData('acquisition_cost', e.target.value)}
-                                        className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700">Vida Útil (Meses)</label>
-                                    <input
-                                        type="number"
-                                        value={data.useful_life_months}
-                                        onChange={(e) => setData('useful_life_months', e.target.value)}
-                                        className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700">Uso Estimado Mensual (Hs)</label>
-                                    <input
-                                        type="number"
-                                        value={data.estimated_monthly_use_hours}
-                                        onChange={(e) => setData('estimated_monthly_use_hours', e.target.value)}
-                                        className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
-                                    />
-                                </div>
-                            </>
-                        )}
-
-                        <div className="md:col-span-3 flex justify-end">
+                        <div className="sm:col-span-4 flex justify-end pt-1">
                             <button
                                 type="submit"
                                 disabled={processing}
-                                className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
+                                className="px-5 py-2.5 bg-slate-900 text-white rounded-xl text-sm font-medium hover:bg-slate-800 transition shadow-sm"
                             >
-                                Guardar Recurso
+                                Guardar Insumo
                             </button>
                         </div>
                     </form>
                 </div>
 
-                {/* Listado */}
-                <div className="bg-white shadow rounded-lg p-6">
-                    <h3 className="text-lg font-medium text-gray-900 mb-4">Catálogo de Insumos</h3>
-                    <table className="min-w-full divide-y divide-gray-200">
-                        <thead>
-                            <tr>
-                                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Nombre</th>
-                                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Tipo</th>
-                                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Unidad</th>
-                                <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Valor Base</th>
-                                <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Depreciación / h</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-200">
-                            {resources.map((res) => (
-                                <tr key={res.id}>
-                                    <td className="px-4 py-2 font-medium text-gray-900">{res.name}</td>
-                                    <td className="px-4 py-2 text-gray-500 capitalize">{res.type}</td>
-                                    <td className="px-4 py-2 text-gray-500">{res.use_unit}</td>
-                                    <td className="px-4 py-2 text-right font-mono">${res.unit_value}</td>
-                                    <td className="px-4 py-2 text-right font-mono text-gray-500">
-                                        {res.hourly_depreciation_rate ? `$${res.hourly_depreciation_rate}` : '-'}
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
+                {/* Listado de Insumos - Tarjeta simple sin bordes pesados */}
+                <div className="bg-white rounded-2xl border border-slate-100 divide-y divide-slate-100 shadow-sm overflow-hidden">
+                    {resources.map((res) => (
+                        <div key={res.id} className="p-4 sm:px-6 flex items-center justify-between hover:bg-slate-50/50 transition">
+                            <div className="space-y-0.5">
+                                <p className="font-semibold text-slate-900 text-sm">{res.name}</p>
+                                <div className="flex items-center gap-2">
+                                    <Badge variant="default" className="capitalize text-[10px]">
+                                        {res.type}
+                                    </Badge>
+                                    <span className="text-xs text-slate-400">por {res.use_unit}</span>
+                                </div>
+                            </div>
+                            <div className="text-right">
+                                <span className="font-mono text-base font-bold text-slate-900">
+                                    ${res.unit_value}
+                                </span>
+                            </div>
+                        </div>
+                    ))}
                 </div>
+
             </div>
         </AuthenticatedLayout>
     );
