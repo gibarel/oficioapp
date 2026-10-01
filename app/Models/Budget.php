@@ -63,4 +63,9 @@ class Budget extends Model
     {
         return $this->hasMany(Income::class);
     }
+
+    public function transactions(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+    return $this->hasMany(Transaction::class);
+    }
 }
