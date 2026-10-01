@@ -6,6 +6,7 @@ use App\Http\Controllers\ResourceController;
 use App\Http\Controllers\WorkController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
+use App\Http\Controllers\PublicBudgetController;
 
 use App\Http\Controllers\DashboardController;
 
@@ -19,6 +20,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     })->name('dashboard');
     Route::get('/budgets/{budget}/pdf', [BudgetController::class, 'downloadPdf'])->name('budgets.pdf');
     Route::get('/dashboard', DashboardController::class)->name('dashboard');
+    Route::get('/p/presupuesto/{uuid}', [PublicBudgetController::class, 'show'])->name('public.budgets.show');
+    Route::post('/p/presupuesto/{uuid}/status', [PublicBudgetController::class, 'updateStatus'])->name('public.budgets.status');
     // Módulos principales OficioApp
     Route::resource('works', WorkController::class);
     Route::resource('resources', ResourceController::class)->only(['index', 'store', 'update', 'destroy']);

@@ -1,84 +1,93 @@
 import React from 'react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head } from '@inertiajs/react';
+import Badge from '@/Components/Badge';
 
 export default function Show({ auth, budget }) {
+
+    // Generar enlace dinámico para WhatsApp
+    const getWhatsAppShareUrl = () => {
+    const cleanPhone = budget.client_phone ? budget.client_phone.replace(/[^0-9]/g, '') : '';
+    const publicUrl = route('public.budgets.show', budget.uuid);
+    
+    const message = `Hola ${budget.client_name}, te adjunto el presupuesto *#${budget.budget_number}* por un total de *$${budget.total_price} ${budget.currency}*.\n\nPodés revisarlo y responder directamente desde este enlace:\n${publicUrl}`;
+    
+    return cleanPhone 
+        ? `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`
+        : `https://wa.me/?text=${encodeURIComponent(message)}`;
+};
+
     return (
-        <AuthenticatedLayout user={auth.user} header={<h2 className="font-semibold text-xl text-gray-800 leading-tight">Presupuesto {budget.budget_number}</h2>}>
+        <AuthenticatedLayout 
+            user={auth.user} 
+            header={
+                <div className="flex justify-between items-center">
+                    <h2 className="font-semibold text-xl text-slate-800 tracking-tight">
+                        Presupuesto #{budget.budget_number}
+                    </h2>
+                    <div className="flex gap-2">
+                        {/* Botón WhatsApp */}
+                        <a
+                            href={getWhatsAppShareUrl()}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="px-4 py-2 bg-emerald-600 text-white rounded-xl text-sm font-medium hover:bg-emerald-700 transition flex items-center gap-1.5 shadow-sm"
+                        >
+                            <span>WhatsApp</span>
+                        </a>
+
+                        {/* Botón Descargar PDF */}
+                        <a
+                            href={route('budgets.pdf', budget.id)}
+                            target="_blank"
+                            className="px-4 py-2 bg-slate-900 text-white rounded-xl text-sm font-medium hover:bg-slate-800 transition flex items-center gap-1.5 shadow-sm"
+                        >
+                            <span>Descargar PDF</span>
+                        </a>
+                    </div>
+                </div>
+            }
+        >
             <Head title={`Presupuesto ${budget.budget_number}`} />
 
-            <div className="py-12 max-w-4xl mx-auto sm:px-6 lg:px-8 space-y-6">
-                <div className="bg-white p-8 shadow-lg rounded-lg space-y-6">
-                    {/* Header */}
-                    <div className="flex justify-between border-b pb-4">
+            <div className="py-8 max-w-3xl mx-auto px-4 sm:px-6">
+                <div className="bg-white p-6 sm:p-8 rounded-2xl border border-slate-100 shadow-sm space-y-6">
+                    {/* Encabezado */}
+                    <div className="flex justify-between items-start border-b border-slate-100 pb-4">
                         <div>
-                            <h3 className="text-2xl font-bold text-gray-900">PRESUPUESTO</h3>
-                            <p className="text-sm text-gray-500">N°: {budget.budget_number}</p>
-                            <p className="text-sm text-gray-500">Fecha: {new Date(budget.issued_at).toLocaleDateString()}</p>
+                            <span className="text-xs font-mono text-slate-400">#{budget.budget_number}</span>
+                            <h3 className="text-xl font-bold text-slate-900">{budget.client_name}</h3>
+                            <p className="text-xs text-slate-500 mt-0.5">
+                                Emisión: {new Date(budget.issued_at).toLocaleDateString()}
+                            </p>
                         </div>
-                        <div className="text-right">
-                            <span className="px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-semibold uppercase">{budget.status}</span>
-                        </div>
+                        <Badge variant={budget.status === 'accepted' ? 'success' : 'default'}>
+                            {budget.status}
+                        </Badge>
                     </div>
 
-                    {/* Cliente */}
-                    <div>
-                        <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider">Cliente</h4>
-                        <p className="text-lg font-semibold text-gray-800">{budget.client_name}</p>
-                        {budget.client_phone && <p className="text-sm text-gray-600">Tel: {budget.client_phone}</p>}
-                        {budget.client_address && <p className="text-sm text-gray-600">Obra: {budget.client_address}</p>}
+                    {/* Tabla simplificada de ítems */}
+                    <div className="divide-y divide-slate-100">
+                        {budget.items.map((item) => (
+                            <div key={item.id} className="py-3 flex justify-between items-center text-sm">
+                                <div>
+                                    <p className="font-medium text-slate-900">{item.work_name_snapshot}</p>
+                                    <p className="text-xs text-slate-400">Cant: {item.quantity} x ${item.unit_price}</p>
+                                </div>
+                                <span className="font-mono font-bold text-slate-900">${item.subtotal_price}</span>
+                            </div>
+                        ))}
                     </div>
 
-                    {/* Ítems */}
-                    <table className="min-w-full divide-y divide-gray-200">
-                        <thead>
-                            <tr className="bg-gray-50">
-                                <th className="px-4 py-2 text-left text-xs font-bold text-gray-500 uppercase">Descripción / Item</th>
-                                <th className="px-4 py-2 text-center text-xs font-bold text-gray-500 uppercase">Cant.</th>
-                                <th className="px-4 py-2 text-right text-xs font-bold text-gray-500 uppercase">P. Unitario</th>
-                                <th className="px-4 py-2 text-right text-xs font-bold text-gray-500 uppercase">Subtotal</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-200">
-                            {budget.items.map((item) => (
-                                <tr key={item.id}>
-                                    <td className="px-4 py-3 font-medium text-gray-900">{item.work_name_snapshot}</td>
-                                    <td className="px-4 py-3 text-center">{item.quantity}</td>
-                                    <td className="px-4 py-3 text-right font-mono">${item.unit_price}</td>
-                                    <td className="px-4 py-3 text-right font-mono font-semibold">${item.subtotal_price}</td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-
-                    {/* Totales consolidado */}
-                    <div className="border-t pt-4 flex justify-end">
-                        <div className="w-64 space-y-2">
-                            <div className="flex justify-between text-sm text-gray-600">
-                                <span>Costo Base:</span>
-                                <span className="font-mono">${budget.subtotal_cost}</span>
-                            </div>
-                            <div className="flex justify-between text-sm text-gray-600">
-                                <span>Imprevistos:</span>
-                                <span className="font-mono">${budget.contingency_amount}</span>
-                            </div>
-                            <div className="flex justify-between text-sm text-gray-600">
-                                <span>Margen Ganancia:</span>
-                                <span className="font-mono">${budget.profit_amount}</span>
-                            </div>
-                            <div className="flex justify-between text-lg font-bold text-gray-900 border-t pt-2">
-                                <span>TOTAL:</span>
-                                <span className="font-mono">${budget.total_price} {budget.currency}</span>
-                            </div>
+                    {/* Resumen Total */}
+                    <div className="pt-4 border-t border-slate-100 flex justify-end">
+                        <div className="text-right space-y-1">
+                            <p className="text-xs text-slate-400">Total Presupuestado</p>
+                            <p className="text-2xl font-extrabold font-mono text-slate-900">
+                                ${budget.total_price} <span className="text-sm font-normal text-slate-500">{budget.currency}</span>
+                            </p>
                         </div>
                     </div>
-
-                    {budget.execution_conditions && (
-                        <div className="border-t pt-4 text-xs text-gray-500">
-                            <p className="font-bold text-gray-700 mb-1">Condiciones de Ejecución:</p>
-                            <p>{budget.execution_conditions}</p>
-                        </div>
-                    )}
                 </div>
             </div>
         </AuthenticatedLayout>
