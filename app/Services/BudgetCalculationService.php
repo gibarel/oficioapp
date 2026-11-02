@@ -21,66 +21,67 @@ class BudgetCalculationService
         $indirectCosts = 0.0;
         $breakdown = [];
 
-        foreach ($work->resources as $resource) {
-            $pivot = $resource->pivot;
+        // Si el método es 'simple', respetamos directamente el precio base ingresado por el usuario
+        if ($work->calculation_method === 'simple') {
+            $directCosts = (float) ($work->base_price ?? 0);
+        } else {
+            // Métodos Intermedio y Avanzado: se calculan a partir de los recursos (materiales y mano de obra)
+            foreach ($work->resources as $resource) {
+                $pivot = $resource->pivot;
 
-            // Si el insumo lo provee el cliente, no suma costo al presupuesto
-            if ($pivot->is_client_provided) {
+                // Si el insumo lo provee el cliente, no suma costo al presupuesto
+                if ($pivot->is_client_provided) {
+                    $breakdown[] = [
+                        'resource_id' => $resource->id,
+                        'name' => $resource->name,
+                        'type' => $resource->type,
+                        'cost' => 0.0,
+                        'note' => 'Provisto por el cliente',
+                    ];
+                    continue;
+                }
+
+                // Usar el valor personalizado del pivot o el valor base del recurso
+                $unitValue = $pivot->custom_unit_value ?? $resource->unit_value;
+
+                // Si es un activo/herramienta con tasa de depreciación por hora
+                if ($resource->type === 'asset' && $resource->hourly_depreciation_rate > 0) {
+                    $unitValue = $resource->hourly_depreciation_rate;
+                }
+
+                $resourceCost = 0.0;
+
+                // Cálculo según tipo de asignación (allocation_type)
+                switch ($pivot->allocation_type) {
+                    case 'hourly_rate':
+                    case 'direct':
+                    default:
+                        $resourceCost = $pivot->quantity * $unitValue;
+                        $directCosts += $resourceCost;
+                        break;
+
+                    case 'percentage_share':
+                        // Imputación indirecta por porcentaje
+                        $resourceCost = ($pivot->allocation_value / 100) * $unitValue;
+                        $indirectCosts += $resourceCost;
+                        break;
+
+                    case 'fixed_estimate':
+                        // Monto fijo global atribuido
+                        $resourceCost = (float) $pivot->allocation_value;
+                        $indirectCosts += $resourceCost;
+                        break;
+                }
+
                 $breakdown[] = [
                     'resource_id' => $resource->id,
                     'name' => $resource->name,
                     'type' => $resource->type,
-                    'cost' => 0.0,
-                    'note' => 'Provisto por el cliente',
+                    'quantity' => $pivot->quantity,
+                    'unit_value' => $unitValue,
+                    'cost' => round($resourceCost, 2),
                 ];
-                continue;
             }
-
-            // Usar el valor personalizado del pivot o el valor base del recurso
-            $unitValue = $pivot->custom_unit_value ?? $resource->unit_value;
-
-            // Si es un activo/herramienta con tasa de depreciación por hora
-            if ($resource->type === 'asset' && $resource->hourly_depreciation_rate > 0) {
-                $unitValue = $resource->hourly_depreciation_rate;
-            }
-
-            $resourceCost = 0.0;
-
-            // Cálculo según tipo de asignación (allocation_type)
-            switch ($pivot->allocation_type) {
-                case 'hourly_rate':
-                case 'direct':
-                default:
-                    $resourceCost = $pivot->quantity * $unitValue;
-                    $directCosts += $resourceCost;
-                    break;
-
-                case 'percentage_share':
-                    // Imputación indirecta por porcentaje
-                    $resourceCost = ($pivot->allocation_value / 100) * $unitValue;
-                    $indirectCosts += $resourceCost;
-                    break;
-
-                case 'fixed_estimate':
-                    // Monto fijo global atribuido
-                    $resourceCost = (float) $pivot->allocation_value;
-                    $indirectCosts += $resourceCost;
-                    break;
-            }
-
-            $breakdown[] = [
-                'resource_id' => $resource->id,
-                'name' => $resource->name,
-                'type' => $resource->type,
-                'quantity' => $pivot->quantity,
-                'unit_value' => $unitValue,
-                'cost' => round($resourceCost, 2),
-            ];
-        }
-
-        // Si el método es 'simple' y no hay recursos cargados, usar base_price
-        if ($work->calculation_method === 'simple' && empty($breakdown) && $work->base_price) {
-            $directCosts = $work->base_price;
         }
 
         $unitSubtotal = $directCosts + $indirectCosts;
@@ -115,7 +116,7 @@ class BudgetCalculationService
     /**
      * Calcula los totales consolidados para un Presupuesto con múltiples ítems.
      *
-     * @param Collection<Work> $worksWithQuantities Array/Collection con pares ['work' => Work, 'quantity' => float]
+     * @param Collection<Work> $items Collection con pares ['work' => Work, 'quantity' => float]
      */
     public function calculateBudgetTotals(Collection $items): array
     {
