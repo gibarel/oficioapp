@@ -41,7 +41,7 @@ class BudgetController extends Controller
         ]);
     }
 
-    public function store(Request $request)
+    public function store(Request $request, BudgetCalculationService $calculator)
     {
         $validated = $request->validate([
             'client_name' => 'required|string|max:255',
@@ -58,11 +58,63 @@ class BudgetController extends Controller
             'items.*.unit_price' => 'required|numeric|min:0',
         ]);
 
-        $subtotal = 0;
+        $subtotalCostTotal = 0;
+        $contingencyTotal = 0;
+        $profitTotal = 0;
+        $grandTotal = 0;
+        
+        $processedItemsData = [];
+
         foreach ($validated['items'] as $item) {
-            $subtotal += $item['quantity'] * $item['unit_price'];
+            $quantity = (float) $item['quantity'];
+            $workId = $item['work_id'] ?? null;
+            
+            $detailedCalculation = null;
+
+            // Si el ítem está vinculado a un trabajo del catálogo, obtenemos su desglose exacto mediante el servicio
+            if ($workId) {
+                $work = $request->user()->works()->with('resources')->find($workId);
+                if ($work) {
+                    $detailedCalculation = $calculator->calculateWorkCost($work, $quantity);
+                }
+            }
+
+            // Si no hay trabajo asociado o no se encontró, construimos un cálculo base
+            if (!$detailedCalculation) {
+                $unitPrice = (float) $item['unit_price'];
+                $lineTotal = $quantity * $unitPrice;
+                $detailedCalculation = [
+                    'direct_costs' => $lineTotal,
+                    'indirect_costs' => 0.0,
+                    'subtotal_cost' => $lineTotal,
+                    'contingency_amount' => 0.0,
+                    'profit_amount' => 0.0,
+                    'unit_price' => $unitPrice,
+                    'total_price' => $lineTotal,
+                    'breakdown' => [],
+                ];
+            }
+
+            $subtotalCostTotal += $detailedCalculation['subtotal_cost'];
+            $contingencyTotal += $detailedCalculation['contingency_amount'];
+            $profitTotal += $detailedCalculation['profit_amount'];
+            $grandTotal += $detailedCalculation['total_price'];
+
+            $processedItemsData[] = [
+                'work_id' => $workId,
+                'work_name_snapshot' => $item['description'],
+                'calculation_method_used' => $item['calculation_method'] ?? ($detailedCalculation['calculation_method'] ?? 'simple'),
+                'details_snapshot' => json_encode($detailedCalculation),
+                'description' => $item['description'],
+                'quantity' => $quantity,
+                'unit' => $item['unit'] ?? 'u.',
+                'unit_price' => $detailedCalculation['unit_price'],
+                'subtotal_price' => $detailedCalculation['subtotal_cost'],
+                'total_price' => $detailedCalculation['total_price'],
+            ];
         }
 
+        // Creamos el presupuesto consolidado con totales reales calculados
         $budget = $request->user()->budgets()->create([
             'uuid' => (string) Str::uuid(),
             'budget_number' => 'PRES-' . strtoupper(Str::random(8)),
@@ -70,34 +122,18 @@ class BudgetController extends Controller
             'client_phone' => $validated['client_phone'] ?? null,
             'client_address' => $validated['client_address'] ?? null,
             'currency' => $validated['currency'],
-            'subtotal_cost' => $subtotal,
-            'contingency_amount' => 0,
-            'profit_amount' => 0,
-            'total_price' => $subtotal,
+            'subtotal_cost' => round($subtotalCostTotal, 2),
+            'contingency_amount' => round($contingencyTotal, 2),
+            'profit_amount' => round($profitTotal, 2),
+            'total_price' => round($grandTotal, 2),
             'status' => 'draft',
             'execution_conditions' => $validated['execution_conditions'] ?? null,
             'issued_at' => now(),
         ]);
 
-        foreach ($validated['items'] as $item) {
-            $itemTotal = $item['quantity'] * $item['unit_price'];
-
-            $budget->items()->create([
-                'work_id' => $item['work_id'] ?? null,
-                'work_name_snapshot' => $item['description'],
-                'calculation_method_used' => $item['calculation_method'] ?? 'simple',
-                'details_snapshot' => json_encode([
-                    'description' => $item['description'],
-                    'unit' => $item['unit'] ?? 'u.',
-                    'unit_price' => $item['unit_price'],
-                ]),
-                'description' => $item['description'],
-                'quantity' => $item['quantity'],
-                'unit' => $item['unit'] ?? 'u.',
-                'unit_price' => $item['unit_price'],
-                'subtotal_price' => $itemTotal,
-                'total_price' => $itemTotal,
-            ]);
+        // Insertamos los ítems con su snapshot detallado
+        foreach ($processedItemsData as $itemData) {
+            $budget->items()->create($itemData);
         }
 
         return redirect()->route('budgets.show', $budget->id)->with('success', 'Presupuesto generado correctamente.');
