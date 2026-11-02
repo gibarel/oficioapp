@@ -5,18 +5,19 @@ namespace App\Http\Controllers;
 use App\Models\Budget;
 use App\Models\Work;
 use App\Services\BudgetCalculationService;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
-use Barryvdh\DomPDF\Facade\Pdf;
 
 class BudgetController extends Controller
 {
     public function index(Request $request): Response
     {
-        $budgets = $request->user()->budgets()
-            ->withCount('items')
-            ->orderBy('created_at', 'desc')
+        $budgets = $request->user()
+            ->budgets()
+            ->latest()
             ->get();
 
         return Inertia::render('Budgets/Index', [
@@ -24,66 +25,82 @@ class BudgetController extends Controller
         ]);
     }
 
-    public function create(Request $request): Response
+    public function create(BudgetCalculationService $calculator): Response
     {
-        $works = $request->user()->works()->with('resources')->get();
+        // Cargamos los trabajos con sus recursos asociados e inyectamos el precio unitario calculado por el servicio
+        $works = auth()->user()->works()->with('resources')->orderBy('name')->get()->map(function ($work) use ($calculator) {
+            $calculation = $calculator->calculateWorkCost($work);
+            
+            // Asignamos dinámicamente el precio unitario sugerido (ya sea simple, intermedio o avanzado)
+            $work->unit_price = $calculation['unit_price'];
+            return $work;
+        });
 
         return Inertia::render('Budgets/Create', [
-            'availableWorks' => $works,
+            'works' => $works,
         ]);
     }
 
-    public function store(Request $request, BudgetCalculationService $calculator)
+    public function store(Request $request)
     {
         $validated = $request->validate([
             'client_name' => 'required|string|max:255',
             'client_phone' => 'nullable|string|max:50',
             'client_address' => 'nullable|string|max:255',
-            'currency' => 'required|string|size:3',
+            'currency' => 'required|string|max:10',
             'execution_conditions' => 'nullable|string',
             'items' => 'required|array|min:1',
-            'items.*.work_id' => 'required|exists:works,id',
+            'items.*.work_id' => 'nullable|exists:works,id',
+            'items.*.description' => 'required|string|max:255',
+            'items.*.calculation_method' => 'nullable|string|in:simple,intermediate,advanced',
             'items.*.quantity' => 'required|numeric|min:0.01',
+            'items.*.unit' => 'nullable|string|max:20',
+            'items.*.unit_price' => 'required|numeric|min:0',
         ]);
 
-        // Mapear trabajos y calcular
-        $itemsCollection = collect($validated['items'])->map(function ($item) {
-            return [
-                'work' => Work::with('resources')->findOrFail($item['work_id']),
-                'quantity' => (float) $item['quantity'],
-            ];
-        });
-
-        $totals = $calculator->calculateBudgetTotals($itemsCollection);
+        $subtotal = 0;
+        foreach ($validated['items'] as $item) {
+            $subtotal += $item['quantity'] * $item['unit_price'];
+        }
 
         $budget = $request->user()->budgets()->create([
-            'budget_number' => 'PRES-' . strtoupper(uniqid()),
+            'uuid' => (string) Str::uuid(),
+            'budget_number' => 'PRES-' . strtoupper(Str::random(8)),
             'client_name' => $validated['client_name'],
             'client_phone' => $validated['client_phone'] ?? null,
             'client_address' => $validated['client_address'] ?? null,
             'currency' => $validated['currency'],
-            'subtotal_cost' => $totals['subtotal_cost'],
-            'contingency_amount' => $totals['contingency_amount'],
-            'profit_amount' => $totals['profit_amount'],
-            'total_price' => $totals['total_price'],
+            'subtotal_cost' => $subtotal,
+            'contingency_amount' => 0,
+            'profit_amount' => 0,
+            'total_price' => $subtotal,
             'status' => 'draft',
             'execution_conditions' => $validated['execution_conditions'] ?? null,
             'issued_at' => now(),
         ]);
 
-        // Guardar snapshot inmutable de los ítems
-        foreach ($totals['items'] as $calculatedItem) {
+        foreach ($validated['items'] as $item) {
+            $itemTotal = $item['quantity'] * $item['unit_price'];
+
             $budget->items()->create([
-                'work_name_snapshot' => $calculatedItem['work_name'],
-                'calculation_method_used' => $calculatedItem['calculation_method'],
-                'quantity' => $calculatedItem['quantity'],
-                'unit_price' => $calculatedItem['unit_price'],
-                'subtotal_price' => $calculatedItem['total_price'],
-                'details_snapshot' => $calculatedItem,
+                'work_id' => $item['work_id'] ?? null,
+                'work_name_snapshot' => $item['description'],
+                'calculation_method_used' => $item['calculation_method'] ?? 'simple',
+                'details_snapshot' => json_encode([
+                    'description' => $item['description'],
+                    'unit' => $item['unit'] ?? 'u.',
+                    'unit_price' => $item['unit_price'],
+                ]),
+                'description' => $item['description'],
+                'quantity' => $item['quantity'],
+                'unit' => $item['unit'] ?? 'u.',
+                'unit_price' => $item['unit_price'],
+                'subtotal_price' => $itemTotal,
+                'total_price' => $itemTotal,
             ]);
         }
 
-        return redirect()->route('budgets.show', $budget->id)->with('success', 'Presupuesto generado.');
+        return redirect()->route('budgets.show', $budget->id)->with('success', 'Presupuesto generado correctamente.');
     }
 
     public function show(Budget $budget): Response

@@ -30,7 +30,7 @@ class SetLocale
             $locale = $request->user()->preferred_locale;
         } else {
             // 3. Header Accept-Language del navegador
-            $browserLocale = $request->preferredLanguage($this->supportedLocales);
+            $browserLocale = $request->getPreferredLanguage($this->supportedLocales);
             if ($browserLocale) {
                 $locale = $browserLocale;
             }

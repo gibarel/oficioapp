@@ -45,17 +45,17 @@ class Resource extends Model
         return $this->hasMany(ResourceAlias::class);
     }
 
-    public function works(): BelongsToMany
+    public function works(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
     {
-        return $this->belongsToMany(Work::class)
-            ->withPivot([
-                'quantity',
-                'custom_unit_value',
-                'allocation_type',
-                'allocation_value',
-                'is_client_provided',
-            ])
-            ->withTimestamps();
+    return $this->belongsToMany(Work::class, 'work_resource')
+        ->withPivot([
+            'quantity',
+            'custom_unit_value',
+            'allocation_type',
+            'allocation_value',
+            'is_client_provided',
+        ])
+        ->withTimestamps();
     }
 
     /**
