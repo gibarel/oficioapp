@@ -28,78 +28,123 @@ export default function Show({ auth, work, calculation }) {
         laborSubtotal = Number(work.base_price || 0);
     }
 
+    // Traducción amigable del método de cálculo
+    const methodNames = {
+        simple: 'Precio Directo (Simple)',
+        intermediate: 'Desglose de Materiales y Mano de Obra',
+        advanced: 'Avanzado (Con Costos Indirectos)'
+    };
+
     return (
         <AuthenticatedLayout
             user={auth.user}
-            header={<h2 className="font-semibold text-xl text-slate-800 leading-tight">Detalle del Trabajo: {work.name}</h2>}
+            header={
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <div>
+                        <span className="text-xs uppercase tracking-wider text-indigo-600 font-bold bg-indigo-50 px-2.5 py-1 rounded-full">
+                            {methodNames[work.calculation_method] || work.calculation_method}
+                        </span>
+                        <h2 className="font-bold text-2xl text-slate-800 leading-tight mt-1">{work.name}</h2>
+                    </div>
+                    <div className="flex items-center gap-3">
+                        <Link
+                            href={route('works.edit', work.id)}
+                            className="inline-flex items-center px-4 py-2 bg-indigo-600 text-white text-sm font-semibold rounded-xl hover:bg-indigo-500 transition shadow-sm"
+                        >
+                            ✏️ Editar Trabajo
+                        </Link>
+                        <Link
+                            href={route('works.index')}
+                            className="inline-flex items-center px-4 py-2 bg-white border border-slate-200 text-slate-700 text-sm font-semibold rounded-xl hover:bg-slate-50 transition"
+                        >
+                            ← Volver
+                        </Link>
+                    </div>
+                </div>
+            }
         >
             <Head title={`Trabajo - ${work.name}`} />
 
             <div className="py-8 max-w-4xl mx-auto sm:px-6 lg:px-8 space-y-6">
-                {/* Encabezado */}
-                <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex justify-between items-center">
+                
+                {/* 🌟 Tarjeta Estrella: Precio Sugerido Final */}
+                <div className="bg-gradient-to-br from-slate-900 to-indigo-950 text-white p-6 sm:p-8 rounded-3xl shadow-lg flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
                     <div>
-                        <span className="text-xs uppercase tracking-wider text-slate-400 font-bold">Método y Unidad de Medida</span>
-                        <p className="text-lg font-bold text-slate-800">
-                            {work.reference_unit || 'u.'} — <span className="text-indigo-600 uppercase text-sm font-semibold">{work.calculation_method}</span>
+                        <span className="text-xs uppercase tracking-widest text-indigo-300 font-bold">Precio Sugerido de Venta</span>
+                        <p className="text-3xl sm:text-4xl font-black font-mono mt-1">
+                            ${Number(calc.unit_price || 0).toLocaleString('es-AR', { minimumFractionDigits: 2 })}
+                            <span className="text-sm font-normal text-indigo-200 ml-2">por {work.reference_unit || 'unidad'}</span>
+                        </p>
+                        <p className="text-xs text-slate-300 mt-2">
+                            Este es el valor ideal para presupuestar este trabajo, incluyendo tus costos, imprevistos y ganancia.
                         </p>
                     </div>
-                    <div className="flex gap-3">
-                        <Link
-                            href={route('works.edit', work.id)}
-                            className="px-4 py-2 bg-slate-900 text-white text-sm font-semibold rounded-xl hover:bg-slate-800 transition shadow-sm"
-                        >
-                            Editar Trabajo
-                        </Link>
-                        <Link
-                            href={route('works.index')}
-                            className="px-4 py-2 bg-slate-100 text-slate-700 text-sm font-semibold rounded-xl hover:bg-slate-200 transition"
-                        >
-                            Volver
-                        </Link>
+                    <div className="bg-white/10 backdrop-blur-md px-5 py-4 rounded-2xl border border-white/10 text-right w-full sm:w-auto">
+                        <span className="text-xs text-indigo-200 block">Costo Neto Total</span>
+                        <span className="text-xl font-bold font-mono text-white">
+                            ${Number(calc.subtotal_cost || (laborSubtotal + materialSubtotal)).toLocaleString('es-AR', { minimumFractionDigits: 2 })}
+                        </span>
                     </div>
                 </div>
 
-                {/* Resumen Económico */}
+                {/* Desglose de Costos Básicos */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex items-center gap-4">
+                        <div className="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center text-xl font-bold">
+                            👷
+                        </div>
+                        <div>
+                            <span className="text-xs text-slate-400 font-bold uppercase tracking-wider">Mano de Obra / Esfuerzo</span>
+                            <p className="text-xl font-bold text-slate-800 font-mono mt-0.5">
+                                ${Number(laborSubtotal).toLocaleString('es-AR', { minimumFractionDigits: 2 })}
+                            </p>
+                        </div>
+                    </div>
+
+                    <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex items-center gap-4">
+                        <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center text-xl font-bold">
+                            📦
+                        </div>
+                        <div>
+                            <span className="text-xs text-slate-400 font-bold uppercase tracking-wider">Materiales e Insumos</span>
+                            <p className="text-xl font-bold text-slate-800 font-mono mt-0.5">
+                                ${Number(materialSubtotal).toLocaleString('es-AR', { minimumFractionDigits: 2 })}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Resumen de Incrementos (Imprevistos y Ganancia) */}
                 <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 space-y-4">
-                    <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider">Desglose de Costos y Precio Final</h3>
+                    <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">¿Cómo se compone tu precio?</h3>
                     
-                    {/* Fila de origen del costo base */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pb-4 border-b border-slate-100">
-                        <div className="p-4 bg-amber-50/60 border border-amber-100 rounded-xl">
-                            <span className="text-xs text-amber-800 font-bold uppercase tracking-wider">👷 Mano de Obra (Esfuerzo Humano)</span>
-                            <p className="text-xl font-bold text-slate-800 font-mono mt-1">${Number(laborSubtotal).toFixed(2)}</p>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div className="p-4 bg-slate-50 rounded-xl">
+                            <span className="text-xs text-slate-500 block font-medium">Costo Base Acumulado</span>
+                            <p className="text-lg font-bold text-slate-800 font-mono mt-1">
+                                ${Number(calc.subtotal_cost || 0).toLocaleString('es-AR', { minimumFractionDigits: 2 })}
+                            </p>
                         </div>
-                        <div className="p-4 bg-blue-50/60 border border-blue-100 rounded-xl">
-                            <span className="text-xs text-blue-800 font-bold uppercase tracking-wider">📦 Materiales e Insumos</span>
-                            <p className="text-xl font-bold text-slate-800 font-mono mt-1">${Number(materialSubtotal).toFixed(2)}</p>
+                        
+                        <div className="p-4 bg-slate-50 rounded-xl">
+                            <span className="text-xs text-slate-500 block font-medium">Colchón de Imprevistos ({work.contingency_percentage}%)</span>
+                            <p className="text-lg font-bold text-amber-600 font-mono mt-1">
+                                + ${Number(calc.contingency_amount || 0).toLocaleString('es-AR', { minimumFractionDigits: 2 })}
+                            </p>
                         </div>
-                    </div>
 
-                    {/* Fila de Totales e Incrementos */}
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-2">
                         <div className="p-4 bg-slate-50 rounded-xl">
-                            <span className="text-xs text-slate-500 font-medium">Costo Base Total</span>
-                            <p className="text-lg font-bold text-slate-800 font-mono">${Number(calc.subtotal_cost || (laborSubtotal + materialSubtotal)).toFixed(2)}</p>
-                        </div>
-                        <div className="p-4 bg-slate-50 rounded-xl">
-                            <span className="text-xs text-slate-500 font-medium">Imprevistos ({work.contingency_percentage}%)</span>
-                            <p className="text-lg font-bold text-slate-800 font-mono">${Number(calc.contingency_amount || 0).toFixed(2)}</p>
-                        </div>
-                        <div className="p-4 bg-slate-50 rounded-xl">
-                            <span className="text-xs text-slate-500 font-medium">Margen ({work.profit_margin_percentage}%)</span>
-                            <p className="text-lg font-bold text-slate-800 font-mono">${Number(calc.profit_amount || 0).toFixed(2)}</p>
-                        </div>
-                        <div className="p-4 bg-slate-900 text-white rounded-xl shadow-sm">
-                            <span className="text-xs opacity-80 font-medium">Precio Sugerido / U</span>
-                            <p className="text-xl font-bold font-mono">${Number(calc.unit_price || 0).toFixed(2)}</p>
+                            <span className="text-xs text-slate-500 block font-medium">Tu Margen de Ganancia ({work.profit_margin_percentage}%)</span>
+                            <p className="text-lg font-bold text-emerald-600 font-mono mt-1">
+                                + ${Number(calc.profit_amount || 0).toLocaleString('es-AR', { minimumFractionDigits: 2 })}
+                            </p>
                         </div>
                     </div>
                 </div>
 
-                {/* Listado de Insumos / Mano de Obra */}
+                {/* Listado de Recursos Asociados */}
                 <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-                    <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4">Detalle de Mano de Obra y Materiales Incluidos</h3>
+                    <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">Insumos y Mano de Obra Detallados</h3>
                     {work.resources && work.resources.length > 0 ? (
                         <div className="divide-y divide-slate-100">
                             {work.resources.map((res) => {
@@ -109,27 +154,35 @@ export default function Show({ auth, work, calculation }) {
                                 const isLabor = res.type === 'labor';
 
                                 return (
-                                    <div key={res.id} className="py-3 flex justify-between items-center text-sm">
+                                    <div key={res.id} className="py-3.5 flex justify-between items-center text-sm">
                                         <div className="flex items-center gap-3">
-                                            <span className={`text-xs px-2 py-0.5 rounded-md font-bold ${isLabor ? 'bg-amber-100 text-amber-800' : 'bg-blue-100 text-blue-800'}`}>
+                                            <span className={`text-xs px-2.5 py-1 rounded-lg font-bold ${isLabor ? 'bg-amber-100 text-amber-800' : 'bg-blue-100 text-blue-800'}`}>
                                                 {isLabor ? '👷 Mano de Obra' : '📦 Material'}
                                             </span>
                                             <div>
                                                 <p className="font-semibold text-slate-800">{res.name}</p>
-                                                <p className="text-xs text-slate-500">Cantidad: {qty} × ${Number(unitVal).toFixed(2)}</p>
+                                                <p className="text-xs text-slate-500 mt-0.5">
+                                                    Cantidad: {qty} × ${Number(unitVal).toLocaleString('es-AR', { minimumFractionDigits: 2 })}
+                                                </p>
                                             </div>
                                         </div>
                                         <div className="text-right">
-                                            <p className="font-bold text-slate-900 font-mono">${Number(subtotal).toFixed(2)}</p>
+                                            <p className="font-bold text-slate-900 font-mono">
+                                                ${Number(subtotal).toLocaleString('es-AR', { minimumFractionDigits: 2 })}
+                                            </p>
                                         </div>
                                     </div>
                                 );
                             })}
                         </div>
                     ) : (
-                        <p className="text-sm text-slate-400 italic">No hay insumos ni mano de obra desglosada vinculada (Método Simple).</p>
+                        <div className="text-center py-8 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
+                            <p className="text-sm text-slate-500 font-medium">Este trabajo utiliza el Método Simple (precio directo sin desglose de materiales).</p>
+                            <p className="text-xs text-slate-400 mt-1">Puedes editarlo en cualquier momento si deseas agregarle insumos o mano de obra.</p>
+                        </div>
                     )}
                 </div>
+
             </div>
         </AuthenticatedLayout>
     );
