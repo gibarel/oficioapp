@@ -271,3 +271,8 @@ export default function Create({ auth, resources = [] }) {
                             Guardar Trabajo
                         </button>
                     </div>
+                </form>
+            </div>
+        </AuthenticatedLayout>
+    );
+}
