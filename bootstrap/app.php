@@ -12,8 +12,11 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
-        //
+        // Registramos el middleware de Inertia para que comparta las props globales (como auth)
+        $middleware->web(append: [
+            \App\Http\Middleware\HandleInertiaRequests::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
-        Integration::handles($exceptions); // <-- Agrega esta línea
+        Integration::handles($exceptions);
     })->create();
