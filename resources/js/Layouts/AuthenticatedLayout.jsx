@@ -172,6 +172,10 @@ export default function AuthenticatedLayout({ header, children }) {
             )}
 
             <main>{children}</main>
-        </div>
-    );
-}
+
+            {/* 🟢 Botón flotante de WhatsApp para soporte directo */}
+            <a
+                href="https://wa.me/5491134264951?text=Hola,%20estoy%20probando%20OficioApp%20y%20tengo%20un%20comentario:"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="fixed bottom-6 right-6 z-50 bg-emerald-500 hover:bg-emerald-600 text-
