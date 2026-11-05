@@ -25,8 +25,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     supervisor \
     && rm -rf /var/lib/apt/lists/*
 
-# Instalar extensiones PHP para PostgreSQL
-RUN docker-php-ext-install pdo pdo_pgsql pgsql mbstring exif pcntl bcmath gd
+# Copiar el instalador oficial de extensiones PHP (rápido y precompilado)
+COPY --from=mlocati/php-extension-installer:latest /usr/bin/install-php-extensions /usr/local/bin/
+
+# Instalar extensiones PHP necesarias de forma segura y optimizada
+RUN install-php-extensions pdo pdo_pgsql pgsql mbstring exif pcntl bcmath gd
 
 # Instalar Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
@@ -46,7 +49,7 @@ COPY --from=frontend-builder /app/public/build /var/www/html/public/build
 # Finalizar scripts de composer
 RUN composer dump-autoload --optimize
 
-# Permisos necesarios para Laravel/Symfony en storage y cache
+# Permisos necesarios para Laravel en storage y cache
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache \
     && chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
 
