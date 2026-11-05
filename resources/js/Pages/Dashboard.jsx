@@ -4,14 +4,16 @@ import { Head, Link } from '@inertiajs/react';
 import Badge from '@/Components/Badge';
 
 export default function Dashboard({ auth, stats, recentBudgets }) {
+    const user = auth?.user;
+
     return (
         <AuthenticatedLayout
-            user={auth.user}
+            user={user}
             header={
                 <div className="flex justify-between items-center">
                     <div>
                         <h2 className="font-bold text-xl text-slate-900 tracking-tight">
-                            Hola, {auth.user.name} 👋
+                            Hola, {user?.name || 'Usuario'} 👋
                         </h2>
                         <p className="text-xs text-slate-500">Resumen general de tu actividad</p>
                     </div>
@@ -33,28 +35,28 @@ export default function Dashboard({ auth, stats, recentBudgets }) {
                     <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm space-y-1">
                         <span className="text-xs font-medium text-slate-400">Total Facturable</span>
                         <p className="text-xl sm:text-2xl font-extrabold font-mono text-slate-900">
-                            ${stats.totalAmountSum}
+                            ${stats?.totalAmountSum || 0}
                         </p>
                     </div>
 
                     <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm space-y-1">
                         <span className="text-xs font-medium text-slate-400">Emitidos</span>
                         <p className="text-xl sm:text-2xl font-extrabold text-slate-900">
-                            {stats.totalIssued}
+                            {stats?.totalIssued || 0}
                         </p>
                     </div>
 
                     <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm space-y-1">
                         <span className="text-xs font-medium text-slate-400">Aprobados</span>
                         <p className="text-xl sm:text-2xl font-extrabold text-emerald-600">
-                            {stats.totalApproved}
+                            {stats?.totalApproved || 0}
                         </p>
                     </div>
 
                     <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm space-y-1">
                         <span className="text-xs font-medium text-slate-400">Borradores</span>
                         <p className="text-xl sm:text-2xl font-extrabold text-slate-500">
-                            {stats.totalDrafts}
+                            {stats?.totalDrafts || 0}
                         </p>
                     </div>
                 </div>
@@ -107,7 +109,7 @@ export default function Dashboard({ auth, stats, recentBudgets }) {
                     </div>
 
                     <div className="divide-y divide-slate-100">
-                        {recentBudgets.map((b) => (
+                        {recentBudgets?.map((b) => (
                             <Link
                                 key={b.id}
                                 href={route('budgets.show', b.id)}
@@ -132,7 +134,7 @@ export default function Dashboard({ auth, stats, recentBudgets }) {
                             </Link>
                         ))}
 
-                        {recentBudgets.length === 0 && (
+                        {(!recentBudgets || recentBudgets.length === 0) && (
                             <div className="p-8 text-center text-xs text-slate-400">
                                 No tenés presupuestos recientes registrados.
                             </div>
