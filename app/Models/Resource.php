@@ -5,8 +5,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Builder;
 
 class Resource extends Model
 {
@@ -35,6 +35,22 @@ class Resource extends Model
         'is_sponsored' => 'boolean',
     ];
 
+    /**
+     * The "booted" method of the model.
+     * Asegura que por defecto se filtren los recursos del usuario o los globales del sistema.
+     */
+    protected static function booted(): void
+    {
+        static::addGlobalScope('available_for_user', function (Builder $builder) {
+            if (auth()->check()) {
+                $builder->where('user_id', auth()->id())
+                        ->orWhereNull('user_id');
+            } else {
+                $builder->whereNull('user_id');
+            }
+        });
+    }
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
@@ -47,15 +63,15 @@ class Resource extends Model
 
     public function works(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
     {
-    return $this->belongsToMany(Work::class, 'work_resource')
-        ->withPivot([
-            'quantity',
-            'custom_unit_value',
-            'allocation_type',
-            'allocation_value',
-            'is_client_provided',
-        ])
-        ->withTimestamps();
+        return $this->belongsToMany(Work::class, 'work_resource')
+            ->withPivot([
+                'quantity',
+                'custom_unit_value',
+                'allocation_type',
+                'allocation_value',
+                'is_client_provided',
+            ])
+            ->withTimestamps();
     }
 
     /**
