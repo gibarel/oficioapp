@@ -1,9 +1,9 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, useForm } from '@inertiajs/react';
-import { useState, useMemo } from 'T'; // O react normal
+import { useState, useMemo } from 'react';
 
 export default function Index({ auth, resources, flash }) {
-    // Estado para el formulario de creación (el que ya tenías)
+    // Estado para el formulario de creación
     const { data, setData, post, processing, errors, reset } = useForm({
         type: 'material',
         name: '',
@@ -13,7 +13,7 @@ export default function Index({ auth, resources, flash }) {
         conversion_factor: 1,
     });
 
-    // 🔍 Estados para el Buscador y Filtro por Categoría
+    // Estados para el Buscador y Filtro por Categoría
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedCategory, setSelectedCategory] = useState('all');
 
@@ -24,7 +24,7 @@ export default function Index({ auth, resources, flash }) {
         });
     };
 
-    // 🔎 Filtrar recursos en tiempo real
+    // Filtrar recursos en tiempo real
     const filteredResources = useMemo(() => {
         return resources.filter((resource) => {
             const matchesSearch = resource.name.toLowerCase().includes(searchTerm.toLowerCase());
@@ -120,7 +120,7 @@ export default function Index({ auth, resources, flash }) {
                         </form>
                     </div>
 
-                    {/* 🔎 Seccion de Filtros y Buscador */}
+                    {/* Seccion de Filtros y Buscador */}
                     <div className="bg-white p-6 shadow-sm sm:rounded-lg flex flex-col sm:flex-row justify-between gap-4 items-center">
                         <div className="w-full sm:w-1/2">
                             <input
@@ -160,7 +160,7 @@ export default function Index({ auth, resources, flash }) {
                         </div>
                     </div>
 
-                    {/* 📋 Listado de Recursos en Tabla */}
+                    {/* Listado de Recursos en Tabla */}
                     <div className="bg-white shadow-sm sm:rounded-lg overflow-hidden">
                         <table className="min-w-full divide-y divide-gray-200">
                             <thead className="bg-gray-50">
