@@ -11,7 +11,11 @@ class ResourceController extends Controller
 {
     public function index(Request $request): Response
     {
-        $resources = $request->user()->resources()
+        $userId = $request->user()->id;
+
+        // Trae los recursos propios del usuario y los globales del sistema (user_id is null)
+        $resources = Resource::where('user_id', $userId)
+            ->orWhereNull('user_id')
             ->with('aliases')
             ->orderBy('type')
             ->orderBy('name')
