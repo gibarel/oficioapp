@@ -3,7 +3,6 @@ import { Head, useForm } from '@inertiajs/react';
 import { useState, useMemo } from 'react';
 
 export default function Index({ auth, resources, flash }) {
-    // Estado para el formulario de creación
     const { data, setData, post, processing, errors, reset } = useForm({
         type: 'material',
         name: '',
@@ -13,7 +12,6 @@ export default function Index({ auth, resources, flash }) {
         conversion_factor: 1,
     });
 
-    // Estados para el Buscador y Filtro por Categoría
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedCategory, setSelectedCategory] = useState('all');
 
@@ -24,7 +22,6 @@ export default function Index({ auth, resources, flash }) {
         });
     };
 
-    // Filtrar recursos en tiempo real
     const filteredResources = useMemo(() => {
         return resources.filter((resource) => {
             const matchesSearch = resource.name.toLowerCase().includes(searchTerm.toLowerCase());
@@ -57,14 +54,12 @@ export default function Index({ auth, resources, flash }) {
             <div className="py-12">
                 <div className="mx-auto max-w-7xl sm:px-6 lg:px-8 space-y-6">
                     
-                    {/* Alerta de éxito */}
                     {flash?.success && (
                         <div className="bg-emerald-100 border border-emerald-400 text-emerald-700 px-4 py-3 rounded relative">
                             {flash.success}
                         </div>
                     )}
 
-                    {/* Formulario para cargar nuevo insumo */}
                     <div className="bg-white p-6 shadow-sm sm:rounded-lg">
                         <h3 className="text-lg font-medium text-gray-900 mb-4">+ CARGAR NUEVO RECURSO</h3>
                         <form onSubmit={submit} className="grid grid-cols-1 sm:grid-cols-4 gap-4 items-end">
@@ -120,7 +115,6 @@ export default function Index({ auth, resources, flash }) {
                         </form>
                     </div>
 
-                    {/* Seccion de Filtros y Buscador */}
                     <div className="bg-white p-6 shadow-sm sm:rounded-lg flex flex-col sm:flex-row justify-between gap-4 items-center">
                         <div className="w-full sm:w-1/2">
                             <input
@@ -160,7 +154,6 @@ export default function Index({ auth, resources, flash }) {
                         </div>
                     </div>
 
-                    {/* Listado de Recursos en Tabla */}
                     <div className="bg-white shadow-sm sm:rounded-lg overflow-hidden">
                         <table className="min-w-full divide-y divide-gray-200">
                             <thead className="bg-gray-50">
