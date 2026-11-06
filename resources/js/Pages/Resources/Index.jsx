@@ -1,103 +1,220 @@
-import React from 'react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, useForm } from '@inertiajs/react';
-import Badge from '@/Components/Badge';
+import { useState, useMemo } from 'react';
 
-export default function Index({ auth, resources }) {
+export default function Index({ auth, resources, flash }) {
+    // Estado para el formulario de creación
     const { data, setData, post, processing, errors, reset } = useForm({
         type: 'material',
         name: '',
         use_unit: 'unidad',
         unit_value: '',
+        purchase_unit: '',
+        conversion_factor: 1,
     });
+
+    // Estados para el Buscador y Filtro por Categoría
+    const [searchTerm, setSearchTerm] = useState('');
+    const [selectedCategory, setSelectedCategory] = useState('all');
 
     const submit = (e) => {
         e.preventDefault();
         post(route('resources.store'), {
-            onSuccess: () => reset(),
+            onSuccess: () => reset('name', 'unit_value', 'purchase_unit'),
         });
+    };
+
+    // Filtrar recursos en tiempo real
+    const filteredResources = useMemo(() => {
+        return resources.filter((resource) => {
+            const matchesSearch = resource.name.toLowerCase().includes(searchTerm.toLowerCase());
+            const matchesCategory = selectedCategory === 'all' || resource.type === selectedCategory;
+            return matchesSearch && matchesCategory;
+        });
+    }, [resources, searchTerm, selectedCategory]);
+
+    const getTypeLabel = (type) => {
+        const labels = {
+            material: 'Material',
+            labor: 'Mano de Obra',
+            asset: 'Herramienta / Equipo',
+            service: 'Servicio',
+            extra: 'Extra',
+        };
+        return labels[type] || type;
     };
 
     return (
         <AuthenticatedLayout
-            user={auth.user}
-            header={<h2 className="font-semibold text-xl text-slate-800 tracking-tight">Insumos y Recursos</h2>}
+            header={
+                <h2 className="text-xl font-semibold leading-tight text-gray-800">
+                    Insumos y Recursos
+                </h2>
+            }
         >
-            <Head title="Insumos" />
+            <Head title="Insumos y Recursos" />
 
-            <div className="py-8 max-w-4xl mx-auto px-4 sm:px-6 space-y-6">
-                
-                {/* Alta Rápida - Estilo tarjeta limpia */}
-                <div className="bg-white rounded-2xl border border-slate-100 p-6 shadow-sm">
-                    <h3 className="text-sm font-semibold text-slate-900 mb-4 uppercase tracking-wider">
-                        + Cargar Nuevo Recurso
-                    </h3>
-                    <form onSubmit={submit} className="grid grid-cols-1 sm:grid-cols-4 gap-3">
-                        <div>
-                            <select
-                                value={data.type}
-                                onChange={(e) => setData('type', e.target.value)}
-                                className="w-full bg-slate-50 border-slate-200 text-slate-800 rounded-xl text-sm focus:ring-slate-900 focus:border-slate-900"
-                            >
-                                <option value="material">Material</option>
-                                <option value="labor">Mano de obra</option>
-                                <option value="asset">Herramienta</option>
-                                <option value="service">Servicio</option>
-                            </select>
+            <div className="py-12">
+                <div className="mx-auto max-w-7xl sm:px-6 lg:px-8 space-y-6">
+                    
+                    {/* Alerta de éxito */}
+                    {flash?.success && (
+                        <div className="bg-emerald-100 border border-emerald-400 text-emerald-700 px-4 py-3 rounded relative">
+                            {flash.success}
                         </div>
-                        <div className="sm:col-span-2">
+                    )}
+
+                    {/* Formulario para cargar nuevo insumo */}
+                    <div className="bg-white p-6 shadow-sm sm:rounded-lg">
+                        <h3 className="text-lg font-medium text-gray-900 mb-4">+ CARGAR NUEVO RECURSO</h3>
+                        <form onSubmit={submit} className="grid grid-cols-1 sm:grid-cols-4 gap-4 items-end">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700">Tipo</label>
+                                <select
+                                    value={data.type}
+                                    onChange={(e) => setData('type', e.target.value)}
+                                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                                >
+                                    <option value="material">Material</option>
+                                    <option value="labor">Mano de Obra</option>
+                                    <option value="asset">Herramienta / Equipo</option>
+                                    <option value="service">Servicio</option>
+                                    <option value="extra">Extra</option>
+                                </select>
+                            </div>
+
+                            <div className="sm:col-span-2">
+                                <label className="block text-sm font-medium text-gray-700">Nombre</label>
+                                <input
+                                    type="text"
+                                    placeholder="ej: Bolsa de Cemento 50kg"
+                                    value={data.name}
+                                    onChange={(e) => setData('name', e.target.value)}
+                                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                                />
+                                {errors.name && <span className="text-red-500 text-xs">{errors.name}</span>}
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700">Precio ($)</label>
+                                <input
+                                    type="number"
+                                    step="0.01"
+                                    placeholder="0.00"
+                                    value={data.unit_value}
+                                    onChange={(e) => setData('unit_value', e.target.value)}
+                                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                                />
+                                {errors.unit_value && <span className="text-red-500 text-xs">{errors.unit_value}</span>}
+                            </div>
+
+                            <div className="sm:col-span-4 flex justify-end">
+                                <button
+                                    type="submit"
+                                    disabled={processing}
+                                    className="bg-gray-900 hover:bg-gray-800 text-white px-4 py-2 rounded-md text-sm font-medium transition"
+                                >
+                                    Guardar Insumo
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    {/* Seccion de Filtros y Buscador */}
+                    <div className="bg-white p-6 shadow-sm sm:rounded-lg flex flex-col sm:flex-row justify-between gap-4 items-center">
+                        <div className="w-full sm:w-1/2">
                             <input
                                 type="text"
-                                placeholder="Nombre (ej: Bolsa de Cemento 50kg)"
-                                value={data.name}
-                                onChange={(e) => setData('name', e.target.value)}
-                                className="w-full bg-slate-50 border-slate-200 text-slate-800 rounded-xl text-sm focus:ring-slate-900 focus:border-slate-900 placeholder:text-slate-400"
+                                placeholder="Buscar por nombre de insumo, herramienta o labor..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                className="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                             />
                         </div>
-                        <div>
-                            <input
-                                type="number"
-                                step="0.01"
-                                placeholder="Precio ($)"
-                                value={data.unit_value}
-                                onChange={(e) => setData('unit_value', e.target.value)}
-                                className="w-full bg-slate-50 border-slate-200 text-slate-800 rounded-xl text-sm focus:ring-slate-900 focus:border-slate-900 font-mono"
-                            />
-                        </div>
-                        <div className="sm:col-span-4 flex justify-end pt-1">
+
+                        <div className="w-full sm:w-auto flex items-center space-x-2 overflow-x-auto pb-2 sm:pb-0">
                             <button
-                                type="submit"
-                                disabled={processing}
-                                className="px-5 py-2.5 bg-slate-900 text-white rounded-xl text-sm font-medium hover:bg-slate-800 transition shadow-sm"
+                                onClick={() => setSelectedCategory('all')}
+                                className={`px-3 py-1.5 rounded-md text-xs font-medium transition ${selectedCategory === 'all' ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
                             >
-                                Guardar Insumo
+                                Todos
+                            </button>
+                            <button
+                                onClick={() => setSelectedCategory('material')}
+                                className={`px-3 py-1.5 rounded-md text-xs font-medium transition ${selectedCategory === 'material' ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+                            >
+                                Materiales
+                            </button>
+                            <button
+                                onClick={() => setSelectedCategory('asset')}
+                                className={`px-3 py-1.5 rounded-md text-xs font-medium transition ${selectedCategory === 'asset' ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+                            >
+                                Herramientas
+                            </button>
+                            <button
+                                onClick={() => setSelectedCategory('labor')}
+                                className={`px-3 py-1.5 rounded-md text-xs font-medium transition ${selectedCategory === 'labor' ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+                            >
+                                Mano de Obra
                             </button>
                         </div>
-                    </form>
-                </div>
+                    </div>
 
-                {/* Listado de Insumos - Tarjeta simple sin bordes pesados */}
-                <div className="bg-white rounded-2xl border border-slate-100 divide-y divide-slate-100 shadow-sm overflow-hidden">
-                    {resources.map((res) => (
-                        <div key={res.id} className="p-4 sm:px-6 flex items-center justify-between hover:bg-slate-50/50 transition">
-                            <div className="space-y-0.5">
-                                <p className="font-semibold text-slate-900 text-sm">{res.name}</p>
-                                <div className="flex items-center gap-2">
-                                    <Badge variant="default" className="capitalize text-[10px]">
-                                        {res.type}
-                                    </Badge>
-                                    <span className="text-xs text-slate-400">por {res.use_unit}</span>
-                                </div>
-                            </div>
-                            <div className="text-right">
-                                <span className="font-mono text-base font-bold text-slate-900">
-                                    ${res.unit_value}
-                                </span>
-                            </div>
-                        </div>
-                    ))}
-                </div>
+                    {/* Listado de Recursos en Tabla */}
+                    <div className="bg-white shadow-sm sm:rounded-lg overflow-hidden">
+                        <table className="min-w-full divide-y divide-gray-200">
+                            <thead className="bg-gray-50">
+                                <tr>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipo</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Unidad</th>
+                                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Precio Unitario</th>
+                                    <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Origen</th>
+                                </tr>
+                            </thead>
+                            <tbody className="bg-white divide-y divide-gray-200">
+                                {filteredResources.length > 0 ? (
+                                    filteredResources.map((resource) => (
+                                        <tr key={resource.id} className="hover:bg-gray-50">
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                                {resource.name}
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                                                    resource.type === 'material' ? 'bg-blue-100 text-blue-800' :
+                                                    resource.type === 'asset' ? 'bg-amber-100 text-amber-800' :
+                                                    'bg-green-100 text-green-800'
+                                                }`}>
+                                                    {getTypeLabel(resource.type)}
+                                                </span>
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                {resource.use_unit}
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-right font-semibold text-gray-900">
+                                                ${Number(resource.unit_value).toLocaleString('es-AR', { minimumFractionDigits: 2 })}
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-center text-xs text-gray-400">
+                                                {resource.user_id === null ? (
+                                                    <span className="bg-purple-100 text-purple-700 px-2 py-0.5 rounded">Global</span>
+                                                ) : (
+                                                    <span className="bg-gray-100 text-gray-600 px-2 py-0.5 rounded">Personal</span>
+                                                )}
+                                            </td>
+                                        </tr>
+                                    ))
+                                ) : (
+                                    <tr>
+                                        <td colSpan="5" className="px-6 py-10 text-center text-sm text-gray-500">
+                                            No se encontraron insumos que coincidan con la búsqueda.
+                                        </td>
+                                    </tr>
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
 
+                </div>
             </div>
         </AuthenticatedLayout>
     );
