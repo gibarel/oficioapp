@@ -17,7 +17,7 @@ export default function Edit({ auth, work, availableResources = [] }) {
             name: r.name,
             type: r.type,
             quantity: r.pivot.quantity,
-            custom_unit_value: r.pivot.custom_unit_value || r.unit_value || r.unit_price || 0,
+            custom_unit_value: r.pivot.custom_unit_value || r.unit_value || 0,
             allocation_type: r.pivot.allocation_type || 'direct',
             allocation_value: r.pivot.allocation_value || 0,
             is_client_provided: r.pivot.is_client_provided || false,
@@ -41,7 +41,7 @@ export default function Edit({ auth, work, availableResources = [] }) {
             name: resource.name,
             type: resource.type,
             quantity: 1,
-            custom_unit_value: resource.unit_value || resource.unit_price || 0,
+            custom_unit_value: resource.unit_value || 0,
             allocation_type: 'direct',
             allocation_value: 0,
             is_client_provided: false,
@@ -109,7 +109,7 @@ export default function Edit({ auth, work, availableResources = [] }) {
                         </div>
                     </div>
 
-                    {/* Método de Cálculo con explicación sencilla */}
+                    {/* Método de Cálculo */}
                     <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 space-y-3">
                         <label className="block text-xs font-bold uppercase tracking-wider text-slate-700">Forma de cálculo del costo</label>
                         <select
@@ -119,16 +119,16 @@ export default function Edit({ auth, work, availableResources = [] }) {
                         >
                             <option value="simple">Simple: Ingresas el precio conocido directamente</option>
                             <option value="intermediate">Intermedio: Se calcula sumando materiales y mano de obra</option>
-                            <option value="advanced">Avanzado: Incluye costos indirectos y desglose completo</option>
+                            <option value="advanced">Avanzado: Incluye costos indirectos, herramientas y desglose completo</option>
                         </select>
                         <p className="text-xs text-slate-500">
                             {data.calculation_method === 'simple' 
                                 ? '💡 Ideal si ya sabes cuánto cobrar este trabajo por unidad sin desglosarlo.'
-                                : '🛠️ El sistema calculará automáticamente el costo sumando los materiales y mano de obra que agregues abajo.'}
+                                : '🛠️ El sistema calculará automáticamente el costo integrando los recursos asignados abajo.'}
                         </p>
                     </div>
 
-                    {/* Precio Base (Solo para método simple) */}
+                    {/* Precio Base (Método simple) */}
                     {data.calculation_method === 'simple' && (
                         <div className="p-5 bg-indigo-50/50 rounded-2xl border border-indigo-100 space-y-2">
                             <label className="block text-xs font-bold uppercase tracking-wider text-indigo-900">Precio Base por {data.reference_unit || 'unidad'} ($)</label>
@@ -139,20 +139,19 @@ export default function Edit({ auth, work, availableResources = [] }) {
                                 onChange={(e) => setData('base_price', e.target.value)}
                                 className="w-full rounded-xl border-indigo-200 focus:border-indigo-600 focus:ring-indigo-600 text-sm font-mono py-2.5 bg-white"
                             />
-                            <p className="text-xs text-indigo-700">Este valor se utilizará como base para aplicar tus imprevistos y ganancia.</p>
                         </div>
                     )}
 
-                    {/* Selector y Lista de Materiales / Mano de Obra (Para intermedio/avanzado) */}
+                    {/* Selector y Lista de Recursos (Intermedio/Avanzado) */}
                     {(data.calculation_method === 'intermediate' || data.calculation_method === 'advanced') && (
                         <div className="space-y-4 pt-4 border-t border-slate-100">
                             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                                 <div>
                                     <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wider">
-                                        Materiales y Mano de Obra Necesarios
+                                        Recursos Asociados (Materiales, Mano de Obra y Herramientas)
                                     </h3>
                                     <p className="text-xs text-slate-500">
-                                        Agregá los insumos que consume este trabajo por cada {data.reference_unit || 'unidad'}.
+                                        Asocia los insumos y activos necesarios para ejecutar este trabajo por cada {data.reference_unit || 'unidad'}.
                                     </p>
                                 </div>
                                 
@@ -161,26 +160,30 @@ export default function Edit({ auth, work, availableResources = [] }) {
                                     defaultValue=""
                                     className="rounded-xl border-slate-200 focus:border-indigo-600 focus:ring-indigo-600 text-sm py-2 px-4 bg-indigo-600 text-white font-semibold shadow-sm hover:bg-indigo-500 transition cursor-pointer"
                                 >
-                                    <option value="" disabled className="bg-white text-slate-700">+ Agregar Insumo o Mano de Obra</option>
+                                    <option value="" disabled className="bg-white text-slate-700">+ Agregar Recurso</option>
                                     
                                     <optgroup label="👷 Mano de Obra" className="bg-white text-slate-700">
-                                        {Array.isArray(availableResources) && availableResources
-                                            .filter(r => r.type === 'labor')
-                                            .map((res) => (
-                                                <option key={res.id} value={res.id} className="text-slate-800">
-                                                    {res.name} (${Number(res.unit_value || res.unit_price || 0).toFixed(2)})
-                                                </option>
-                                            ))}
+                                        {availableResources.filter(r => r.type === 'labor').map((res) => (
+                                            <option key={res.id} value={res.id} className="text-slate-800">
+                                                {res.name} (${Number(res.unit_value || 0).toFixed(2)})
+                                            </option>
+                                        ))}
                                     </optgroup>
 
                                     <optgroup label="📦 Materiales" className="bg-white text-slate-700">
-                                        {Array.isArray(availableResources) && availableResources
-                                            .filter(r => r.type !== 'labor')
-                                            .map((res) => (
-                                                <option key={res.id} value={res.id} className="text-slate-800">
-                                                    {res.name} (${Number(res.unit_value || res.unit_price || 0).toFixed(2)})
-                                                </option>
-                                            ))}
+                                        {availableResources.filter(r => r.type === 'material' || r.type === 'service' || r.type === 'extra').map((res) => (
+                                            <option key={res.id} value={res.id} className="text-slate-800">
+                                                {res.name} (${Number(res.unit_value || 0).toFixed(2)})
+                                            </option>
+                                        ))}
+                                    </optgroup>
+
+                                    <optgroup label="🛠️ Herramientas / Equipos (Depreciación)" className="bg-white text-slate-700">
+                                        {availableResources.filter(r => r.type === 'asset').map((res) => (
+                                            <option key={res.id} value={res.id} className="text-slate-800">
+                                                {res.name} (Deprec. hora: ${Number(res.hourly_depreciation_rate || res.unit_value || 0).toFixed(2)})
+                                            </option>
+                                        ))}
                                     </optgroup>
                                 </select>
                             </div>
@@ -188,48 +191,78 @@ export default function Edit({ auth, work, availableResources = [] }) {
                             {data.resources.length > 0 ? (
                                 <div className="space-y-3">
                                     {data.resources.map((res, index) => {
-                                        const isLabor = res.type === 'labor';
                                         return (
-                                            <div key={res.id} className="p-4 bg-slate-50 rounded-2xl border border-slate-200 flex flex-col sm:flex-row gap-4 items-center justify-between">
-                                                <div className="w-full sm:w-1/3">
-                                                    <span className="font-semibold text-slate-800 text-sm block">{res.name}</span>
-                                                    <span className={`inline-block text-[10px] uppercase font-bold px-2 py-0.5 rounded-md mt-1 ${isLabor ? 'bg-amber-100 text-amber-800' : 'bg-blue-100 text-blue-800'}`}>
-                                                        {isLabor ? '👷 Mano de Obra' : '📦 Material'}
-                                                    </span>
+                                            <div key={res.id} className="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-3">
+                                                <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
+                                                    <div className="w-full sm:w-1/3">
+                                                        <span className="font-semibold text-slate-800 text-sm block">{res.name}</span>
+                                                        <span className={`inline-block text-[10px] uppercase font-bold px-2 py-0.5 rounded-md mt-1 ${
+                                                            res.type === 'labor' ? 'bg-amber-100 text-amber-800' :
+                                                            res.type === 'asset' ? 'bg-purple-100 text-purple-800' :
+                                                            'bg-blue-100 text-blue-800'
+                                                        }`}>
+                                                            {res.type === 'labor' ? '👷 Mano de Obra' : res.type === 'asset' ? '🛠️ Herramienta' : '📦 Material'}
+                                                        </span>
+                                                    </div>
+
+                                                    <div className="w-full sm:w-1/4">
+                                                        <label className="block text-[10px] uppercase font-bold text-slate-400 mb-1">Cantidad / Horas</label>
+                                                        <input
+                                                            type="number"
+                                                            step="0.01"
+                                                            min="0.01"
+                                                            value={res.quantity}
+                                                            onChange={(e) => handleResourceChange(index, 'quantity', e.target.value)}
+                                                            className="w-full rounded-xl border-slate-200 text-sm py-1.5 font-mono"
+                                                        />
+                                                    </div>
+
+                                                    <div className="w-full sm:w-1/4">
+                                                        <label className="block text-[10px] uppercase font-bold text-slate-400 mb-1">Valor Unit. ($)</label>
+                                                        <input
+                                                            type="number"
+                                                            step="0.01"
+                                                            value={res.custom_unit_value}
+                                                            onChange={(e) => handleResourceChange(index, 'custom_unit_value', e.target.value)}
+                                                            className="w-full rounded-xl border-slate-200 text-sm py-1.5 font-mono"
+                                                        />
+                                                    </div>
+
+                                                    <div className="self-end sm:self-center">
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => handleRemoveResource(index)}
+                                                            className="text-red-500 hover:text-red-700 text-xs font-semibold px-2 py-1"
+                                                        >
+                                                            🗑️ Quitar
+                                                        </button>
+                                                    </div>
                                                 </div>
-                                                <div className="w-full sm:w-1/4">
-                                                    <label className="block text-[10px] uppercase font-bold text-slate-400 mb-1">
-                                                        {isLabor ? 'Horas / Cantidad' : 'Cantidad'}
+
+                                                {/* Opciones Avanzadas (Provisto por cliente / Tipo de asignación) */}
+                                                <div className="flex flex-wrap items-center gap-4 pt-2 border-t border-slate-200/60 text-xs">
+                                                    <label className="flex items-center gap-2 cursor-pointer">
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={res.is_client_provided}
+                                                            onChange={(e) => handleResourceChange(index, 'is_client_provided', e.target.checked)}
+                                                            className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                                                        />
+                                                        <span className="font-medium text-slate-600">Material provisto por el cliente (Costo $0)</span>
                                                     </label>
-                                                    <input
-                                                        type="number"
-                                                        step="0.01"
-                                                        min="0.01"
-                                                        value={res.quantity}
-                                                        onChange={(e) => handleResourceChange(index, 'quantity', e.target.value)}
-                                                        className="w-full rounded-xl border-slate-200 text-sm py-2 font-mono"
-                                                    />
-                                                </div>
-                                                <div className="w-full sm:w-1/4">
-                                                    <label className="block text-[10px] uppercase font-bold text-slate-400 mb-1">
-                                                        Valor Unit. ($)
-                                                    </label>
-                                                    <input
-                                                        type="number"
-                                                        step="0.01"
-                                                        value={res.custom_unit_value}
-                                                        onChange={(e) => handleResourceChange(index, 'custom_unit_value', e.target.value)}
-                                                        className="w-full rounded-xl border-slate-200 text-sm py-2 font-mono"
-                                                    />
-                                                </div>
-                                                <div className="self-end sm:self-center">
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => handleRemoveResource(index)}
-                                                        className="text-red-500 hover:text-red-700 text-xs font-semibold px-2 py-1"
-                                                    >
-                                                        🗑️ Quitar
-                                                    </button>
+
+                                                    <div className="flex items-center gap-2 ml-auto">
+                                                        <span className="text-slate-400 font-bold uppercase text-[10px]">Tipo de Imputación:</span>
+                                                        <select
+                                                            value={res.allocation_type}
+                                                            onChange={(e) => handleResourceChange(index, 'allocation_type', e.target.value)}
+                                                            className="rounded-lg border-slate-200 text-xs py-1 bg-white font-medium"
+                                                        >
+                                                            <option value="direct">Directo (Cant. × Valor)</option>
+                                                            <option value="percentage_share">Porcentaje Indirecto (%)</option>
+                                                            <option value="fixed_estimate">Monto Fijo Global</option>
+                                                        </select>
+                                                    </div>
                                                 </div>
                                             </div>
                                         );
@@ -237,8 +270,8 @@ export default function Edit({ auth, work, availableResources = [] }) {
                                 </div>
                             ) : (
                                 <div className="text-center py-8 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
-                                    <p className="text-sm text-slate-500 font-medium">Todavía no agregaste insumos ni mano de obra a este trabajo.</p>
-                                    <p className="text-xs text-slate-400 mt-1">Usa el botón superior para seleccionarlos del catálogo.</p>
+                                    <p className="text-sm text-slate-500 font-medium">Todavía no agregaste recursos a este trabajo.</p>
+                                    <p className="text-xs text-slate-400 mt-1">Usa el selector superior para incorporar materiales, mano de obra o herramientas.</p>
                                 </div>
                             )}
                         </div>
@@ -255,7 +288,6 @@ export default function Edit({ auth, work, availableResources = [] }) {
                                 onChange={(e) => setData('contingency_percentage', e.target.value)}
                                 className="w-full rounded-xl border-slate-200 focus:border-indigo-600 focus:ring-indigo-600 text-sm font-mono py-2 bg-white"
                             />
-                            <p className="text-[11px] text-slate-500 mt-1">Porcentaje extra para cubrir imprevistos o subas imprevistas.</p>
                         </div>
                         <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
                             <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Margen de Ganancia (%)</label>
@@ -266,7 +298,6 @@ export default function Edit({ auth, work, availableResources = [] }) {
                                 onChange={(e) => setData('profit_margin_percentage', e.target.value)}
                                 className="w-full rounded-xl border-slate-200 focus:border-indigo-600 focus:ring-indigo-600 text-sm font-mono py-2 bg-white"
                             />
-                            <p className="text-[11px] text-slate-500 mt-1">Tu beneficio neto sobre el costo total del trabajo.</p>
                         </div>
                     </div>
 
@@ -275,14 +306,13 @@ export default function Edit({ auth, work, availableResources = [] }) {
                         <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">Notas o aclaraciones (opcional)</label>
                         <textarea
                             rows="3"
-                            placeholder="Detalles sobre herramientas necesarias, aclaraciones para el cliente, etc."
                             value={data.notes}
                             onChange={(e) => setData('notes', e.target.value)}
                             className="w-full rounded-xl border-slate-200 focus:border-indigo-600 focus:ring-indigo-600 text-sm"
                         ></textarea>
                     </div>
 
-                    {/* Botones de acción */}
+                    {/* Botones */}
                     <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
                         <Link
                             href={route('works.index')}
