@@ -74,7 +74,7 @@ export default function Create({ auth, resources = [] }) {
                             value={data.name}
                             onChange={(e) => setData('name', e.target.value)}
                             className="w-full rounded-xl border-slate-200 focus:border-indigo-600 focus:ring-indigo-600 text-sm py-2.5"
-                            placeholder="ej. Colocación de Pisos Cerámicos"
+                            placeholder="ej. Colocación de Pisos Cerámicos o Pintura de Paredes"
                             required
                         />
                         {errors.name && <p className="text-xs text-red-500 mt-1">{errors.name}</p>}
@@ -125,10 +125,10 @@ export default function Create({ auth, resources = [] }) {
                             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                                 <div>
                                     <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wider">
-                                        Recursos Asociados (Materiales, Mano de Obra y Herramientas)
+                                        Recursos Asociados y Rendimientos
                                     </h3>
                                     <p className="text-xs text-slate-500">
-                                        Suma de insumos, esfuerzo humano y activos requeridos por cada {data.reference_unit || 'unidad'}.
+                                        Define cuánto consume 1 {data.reference_unit || 'unidad'} de este trabajo (ej. si 1 lata rinde 10 m2, ingresa 0.1).
                                     </p>
                                 </div>
                                 <select
@@ -181,16 +181,19 @@ export default function Create({ auth, resources = [] }) {
                                                         </span>
                                                     </div>
                                                     
-                                                    <div className="w-full sm:w-1/4">
-                                                        <label className="block text-[10px] uppercase font-bold text-slate-400 mb-1">Cantidad / Horas</label>
+                                                    <div className="w-full sm:w-1/3">
+                                                        <label className="block text-[10px] uppercase font-bold text-indigo-600 mb-1">
+                                                            Consumo por 1 {data.reference_unit || 'u.'}
+                                                        </label>
                                                         <input
                                                             type="number"
-                                                            step="0.01"
-                                                            min="0.01"
+                                                            step="0.001"
+                                                            min="0.001"
                                                             value={res.quantity}
                                                             onChange={(e) => handleResourceChange(index, 'quantity', e.target.value)}
-                                                            className="w-full rounded-xl border-slate-200 text-sm py-1.5 font-mono"
+                                                            className="w-full rounded-xl border-indigo-200 text-sm py-1.5 font-mono focus:border-indigo-600 focus:ring-indigo-600"
                                                         />
+                                                        <span className="text-[10px] text-slate-400 block mt-0.5">Fracción o unidades gastadas por cada 1 {data.reference_unit || 'u.'}</span>
                                                     </div>
 
                                                     <div className="w-full sm:w-1/4">
