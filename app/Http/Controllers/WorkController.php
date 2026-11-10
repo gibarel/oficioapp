@@ -27,7 +27,8 @@ class WorkController extends Controller
 
     public function create(): Response
     {
-        $resources = auth()->user()->resources()->orderBy('name')->get();
+        // Usamos Resource::query() para evitar que la restricción de la relación del usuario oculte los recursos globales (user_id IS NULL)
+        $resources = Resource::orderBy('name')->get();
 
         return Inertia::render('Works/Create', [
             'resources' => $resources,
@@ -100,7 +101,9 @@ class WorkController extends Controller
         Gate::authorize('update', $work);
 
         $work->load('resources');
-        $availableResources = auth()->user()->resources()->orderBy('name')->get();
+        
+        // Cargamos todos los recursos disponibles (personales + globales)
+        $availableResources = Resource::orderBy('name')->get();
 
         return Inertia::render('Works/Edit', [
             'work' => $work,
