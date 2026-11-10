@@ -16,7 +16,7 @@ class WorkController extends Controller
     {
         $works = $request->user()
             ->works()
-            ->withCount('resources')
+            ->with('resources')
             ->latest()
             ->get();
 
