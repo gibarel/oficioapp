@@ -164,12 +164,13 @@ class BudgetController extends Controller
             abort(403, 'No autorizado.');
         }
 
-        // Eliminar los ítems asociados primero (si no hay onDelete cascade en la migración)
+        // Eliminar los ítems asociados primero
         $budget->items()->delete();
         
         // Eliminar el presupuesto
         $budget->delete();
 
-        return redirect()->route('budgets.index')->with('success', 'Presupuesto eliminado correctamente.');
+        // Redirigir al dashboard en lugar de a budgets.index
+        return redirect()->route('dashboard')->with('success', 'Presupuesto eliminado correctamente.');
     }
 }
