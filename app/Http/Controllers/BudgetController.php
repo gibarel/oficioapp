@@ -156,4 +156,20 @@ class BudgetController extends Controller
 
         return $pdf->download("Presupuesto-{$budget->budget_number}.pdf");
     }
+
+    public function destroy(Budget $budget)
+    {
+        // Validar que el presupuesto pertenezca al usuario autenticado
+        if ($budget->user_id !== auth()->id()) {
+            abort(403, 'No autorizado.');
+        }
+
+        // Eliminar los ítems asociados primero (si no hay onDelete cascade en la migración)
+        $budget->items()->delete();
+        
+        // Eliminar el presupuesto
+        $budget->delete();
+
+        return redirect()->route('budgets.index')->with('success', 'Presupuesto eliminado correctamente.');
+    }
 }
