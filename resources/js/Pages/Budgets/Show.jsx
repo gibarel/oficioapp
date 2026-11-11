@@ -8,7 +8,11 @@ export default function Show({ auth, budget }) {
 
     const handleDelete = () => {
         if (confirm(`¿Estás seguro de que deseas eliminar el presupuesto #${budget.budget_number}? Esta acción no se puede deshacer.`)) {
-            destroy(route('budgets.destroy', budget.id));
+            destroy(route('budgets.destroy', budget.id), {
+                onSuccess: () => {
+                    window.location.href = route('dashboard');
+                },
+            });
         }
     };
 
@@ -64,9 +68,9 @@ export default function Show({ auth, budget }) {
                             type="button"
                             onClick={handleDelete}
                             disabled={processing}
-                            className="px-4 py-2 bg-red-50 text-red-600 border border-red-200 rounded-xl text-sm font-semibold hover:bg-red-100 transition shadow-sm"
+                            className="px-4 py-2 bg-red-50 text-red-600 border border-red-200 rounded-xl text-sm font-semibold hover:bg-red-100 transition shadow-sm disabled:opacity-50"
                         >
-                            🗑️ Eliminar
+                            {processing ? 'Eliminando...' : '🗑️ Eliminar'}
                         </button>
                     </div>
                 </div>
