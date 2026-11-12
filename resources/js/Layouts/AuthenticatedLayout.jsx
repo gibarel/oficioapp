@@ -2,8 +2,8 @@ import ApplicationLogo from '@/Components/ApplicationLogo';
 import Dropdown from '@/Components/Dropdown';
 import NavLink from '@/Components/NavLink';
 import ResponsiveNavLink from '@/Components/ResponsiveNavLink';
-import { Link, usePage } from '@inertiajs/react';
-import { useState } from 'react';
+import { Link, usePage, router } from '@inertiajs/react';
+import { useState, useEffect } from 'react';
 
 export default function AuthenticatedLayout({ header, children }) {
     const { auth } = usePage().props;
@@ -11,6 +11,25 @@ export default function AuthenticatedLayout({ header, children }) {
 
     const [showingNavigationDropdown, setShowingNavigationDropdown] =
         useState(false);
+
+    // 📊 Hook para registrar vistas de página dinámicas en Google Analytics (SPA)
+    useEffect(() => {
+        if (typeof window.gtag === 'function') {
+            window.gtag('event', 'page_view', {
+                page_path: window.location.pathname,
+            });
+        }
+
+        const removeListener = router.on('finish', (event) => {
+            if (typeof window.gtag === 'function') {
+                window.gtag('event', 'page_view', {
+                    page_path: event.detail.page.url,
+                });
+            }
+        });
+
+        return () => removeListener();
+    }, []);
 
     return (
         <div className="min-h-screen flex flex-col bg-gray-100">
