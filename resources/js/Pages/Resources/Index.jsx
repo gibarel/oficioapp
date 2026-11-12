@@ -1,9 +1,14 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, useForm } from '@inertiajs/react';
 import { useState, useMemo } from 'react';
+import { useTranslation } from '@/Hooks/useTranslation';
 
 export default function Index({ auth, resources, flash }) {
-    // Formulario para creación
+    const { t, locale } = useTranslation();
+    const dateLocaleMap = { es: 'es-AR', pt: 'pt-BR', en: 'en-US' };
+    const currentDateLocale = dateLocaleMap[locale] || 'es-AR';
+
+    // Formulario para creación y edición
     const { data, setData, post, put, processing, errors, reset, clearErrors } = useForm({
         id: null,
         type: 'material',
@@ -79,34 +84,35 @@ export default function Index({ auth, resources, flash }) {
 
     return (
         <AuthenticatedLayout
+            user={auth.user}
             header={
-                <h2 className="text-xl font-semibold leading-tight text-gray-800">
-                    Insumos y Recursos
+                <h2 className="text-xl font-bold leading-tight text-slate-800 tracking-tight">
+                    {t('dashboard.resourcesTitle', { defaultValue: 'Insumos y Recursos' })}
                 </h2>
             }
         >
-            <Head title="Insumos y Recursos" />
+            <Head title={t('dashboard.resourcesTitle', { defaultValue: 'Insumos y Recursos' })} />
 
-            <div className="py-12">
-                <div className="mx-auto max-w-7xl sm:px-6 lg:px-8 space-y-6">
+            <div className="py-6 sm:py-8">
+                <div className="mx-auto max-w-5xl sm:px-6 lg:px-8 px-4 space-y-6">
                     
                     {flash?.success && (
-                        <div className="bg-emerald-100 border border-emerald-400 text-emerald-700 px-4 py-3 rounded relative">
+                        <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 px-4 py-3 rounded-2xl relative text-sm font-medium shadow-sm">
                             {flash.success}
                         </div>
                     )}
 
                     {/* Formulario Dinámico (Crear / Editar) */}
-                    <div className={`p-6 shadow-sm sm:rounded-lg transition-colors ${isEditing ? 'bg-amber-50 border border-amber-300' : 'bg-white'}`}>
+                    <div className={`p-6 shadow-sm rounded-3xl transition-colors border ${isEditing ? 'bg-amber-50/70 border-amber-300' : 'bg-white border-slate-100'}`}>
                         <div className="flex justify-between items-center mb-4">
-                            <h3 className={`text-lg font-medium ${isEditing ? 'text-amber-900' : 'text-gray-900'}`}>
-                                {isEditing ? '✏️ EDITAR RECURSO (Se guardará como copia personal)' : '+ CARGAR NUEVO RECURSO'}
+                            <h3 className={`text-sm font-bold uppercase tracking-wider ${isEditing ? 'text-amber-900' : 'text-slate-800'}`}>
+                                {isEditing ? '✏️ Editar Recurso (Copia Personal)' : '+ Cargar Nuevo Insumo'}
                             </h3>
                             {isEditing && (
                                 <button
                                     type="button"
                                     onClick={cancelEdit}
-                                    className="text-xs bg-gray-200 hover:bg-gray-300 text-gray-700 px-3 py-1 rounded-md"
+                                    className="text-xs bg-slate-200 hover:bg-slate-300 text-slate-700 px-3 py-1.5 rounded-xl font-semibold transition"
                                 >
                                     Cancelar Edición
                                 </button>
@@ -115,11 +121,11 @@ export default function Index({ auth, resources, flash }) {
 
                         <form onSubmit={submit} className="grid grid-cols-1 sm:grid-cols-4 gap-4 items-end">
                             <div>
-                                <label className="block text-sm font-medium text-gray-700">Tipo</label>
+                                <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">Tipo</label>
                                 <select
                                     value={data.type}
                                     onChange={(e) => setData('type', e.target.value)}
-                                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                                    className="w-full rounded-xl border-slate-200 focus:border-indigo-600 focus:ring-indigo-600 text-sm py-2 bg-white font-medium cursor-pointer"
                                 >
                                     <option value="material">Material</option>
                                     <option value="labor">Mano de Obra</option>
@@ -130,36 +136,36 @@ export default function Index({ auth, resources, flash }) {
                             </div>
 
                             <div className="sm:col-span-2">
-                                <label className="block text-sm font-medium text-gray-700">Nombre</label>
+                                <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">Nombre</label>
                                 <input
                                     type="text"
                                     placeholder="ej: Bolsa de Cemento 50kg"
                                     value={data.name}
                                     onChange={(e) => setData('name', e.target.value)}
-                                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                                    className="w-full rounded-xl border-slate-200 focus:border-indigo-600 focus:ring-indigo-600 text-sm py-2"
                                 />
-                                {errors.name && <span className="text-red-500 text-xs">{errors.name}</span>}
+                                {errors.name && <span className="text-red-500 text-xs mt-1 block">{errors.name}</span>}
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-gray-700">Precio ($)</label>
+                                <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">Precio ($)</label>
                                 <input
                                     type="number"
                                     step="0.01"
                                     placeholder="0.00"
                                     value={data.unit_value}
                                     onChange={(e) => setData('unit_value', e.target.value)}
-                                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                                    className="w-full rounded-xl border-slate-200 focus:border-indigo-600 focus:ring-indigo-600 text-sm py-2 font-mono"
                                 />
-                                {errors.unit_value && <span className="text-red-500 text-xs">{errors.unit_value}</span>}
+                                {errors.unit_value && <span className="text-red-500 text-xs mt-1 block">{errors.unit_value}</span>}
                             </div>
 
-                            <div className="sm:col-span-4 flex justify-end space-x-2">
+                            <div className="sm:col-span-4 flex justify-end">
                                 <button
                                     type="submit"
                                     disabled={processing}
-                                    className={`px-4 py-2 rounded-md text-sm font-medium text-white transition ${
-                                        isEditing ? 'bg-amber-600 hover:bg-amber-700' : 'bg-gray-900 hover:bg-gray-800'
+                                    className={`w-full sm:w-auto px-6 py-2.5 rounded-xl text-sm font-semibold text-white transition shadow-sm ${
+                                        isEditing ? 'bg-amber-600 hover:bg-amber-700' : 'bg-indigo-600 hover:bg-indigo-700'
                                     }`}
                                 >
                                     {isEditing ? 'Actualizar Recurso' : 'Guardar Insumo'}
@@ -169,106 +175,108 @@ export default function Index({ auth, resources, flash }) {
                     </div>
 
                     {/* Buscador y Filtros */}
-                    <div className="bg-white p-6 shadow-sm sm:rounded-lg flex flex-col sm:flex-row justify-between gap-4 items-center">
+                    <div className="bg-white p-5 shadow-sm rounded-3xl border border-slate-100 flex flex-col sm:flex-row justify-between gap-4 items-center">
                         <div className="w-full sm:w-1/2">
                             <input
                                 type="text"
-                                placeholder="Buscar por nombre de insumo, herramienta o labor..."
+                                placeholder="Buscar por nombre de insumo o herramienta..."
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
-                                className="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                                className="w-full rounded-xl border-slate-200 focus:border-indigo-600 focus:ring-indigo-600 text-sm py-2"
                             />
                         </div>
 
-                        <div className="w-full sm:w-auto flex items-center space-x-2 overflow-x-auto pb-2 sm:pb-0">
+                        <div className="w-full sm:w-auto flex items-center space-x-2 overflow-x-auto pb-1 sm:pb-0">
                             <button
                                 onClick={() => setSelectedCategory('all')}
-                                className={`px-3 py-1.5 rounded-md text-xs font-medium transition ${selectedCategory === 'all' ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+                                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition whitespace-nowrap ${selectedCategory === 'all' ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
                             >
                                 Todos
                             </button>
                             <button
                                 onClick={() => setSelectedCategory('material')}
-                                className={`px-3 py-1.5 rounded-md text-xs font-medium transition ${selectedCategory === 'material' ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+                                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition whitespace-nowrap ${selectedCategory === 'material' ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
                             >
                                 Materiales
                             </button>
                             <button
                                 onClick={() => setSelectedCategory('asset')}
-                                className={`px-3 py-1.5 rounded-md text-xs font-medium transition ${selectedCategory === 'asset' ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+                                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition whitespace-nowrap ${selectedCategory === 'asset' ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
                             >
                                 Herramientas
                             </button>
                             <button
                                 onClick={() => setSelectedCategory('labor')}
-                                className={`px-3 py-1.5 rounded-md text-xs font-medium transition ${selectedCategory === 'labor' ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+                                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition whitespace-nowrap ${selectedCategory === 'labor' ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
                             >
                                 Mano de Obra
                             </button>
                         </div>
                     </div>
 
-                    {/* Listado en Tabla */}
-                    <div className="bg-white shadow-sm sm:rounded-lg overflow-hidden">
-                        <table className="min-w-full divide-y divide-gray-200">
-                            <thead className="bg-gray-50">
-                                <tr>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipo</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Unidad</th>
-                                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Precio Unitario</th>
-                                    <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Origen</th>
-                                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
-                                </tr>
-                            </thead>
-                            <tbody className="bg-white divide-y divide-gray-200">
-                                {filteredResources.length > 0 ? (
-                                    filteredResources.map((resource) => (
-                                        <tr key={resource.id} className="hover:bg-gray-50">
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                                {resource.name}
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                                                    resource.type === 'material' ? 'bg-blue-100 text-blue-800' :
-                                                    resource.type === 'asset' ? 'bg-amber-100 text-amber-800' :
-                                                    'bg-green-100 text-green-800'
-                                                }`}>
-                                                    {getTypeLabel(resource.type)}
-                                                </span>
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                {resource.use_unit}
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-right font-semibold text-gray-900">
-                                                ${Number(resource.unit_value).toLocaleString('es-AR', { minimumFractionDigits: 2 })}
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-center text-xs">
-                                                {resource.user_id === null ? (
-                                                    <span className="bg-purple-100 text-purple-700 px-2 py-0.5 rounded font-medium">Global</span>
-                                                ) : (
-                                                    <span className="bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded font-medium">Personal</span>
-                                                )}
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                                <button
-                                                    onClick={() => startEditing(resource)}
-                                                    className="text-indigo-600 hover:text-indigo-900 bg-indigo-50 hover:bg-indigo-100 px-3 py-1 rounded-md text-xs font-semibold transition"
-                                                >
-                                                    Editar
-                                                </button>
+                    {/* Listado en Tabla / Tarjetas Mobile-Friendly */}
+                    <div className="bg-white shadow-sm rounded-3xl border border-slate-100 overflow-hidden">
+                        <div className="overflow-x-auto">
+                            <table className="min-w-full divide-y divide-slate-100">
+                                <thead className="bg-slate-50/50">
+                                    <tr>
+                                        <th className="px-6 py-3.5 text-left text-xs font-bold text-slate-400 uppercase tracking-wider">Nombre</th>
+                                        <th className="px-6 py-3.5 text-left text-xs font-bold text-slate-400 uppercase tracking-wider">Tipo</th>
+                                        <th className="px-6 py-3.5 text-left text-xs font-bold text-slate-400 uppercase tracking-wider">Unidad</th>
+                                        <th className="px-6 py-3.5 text-right text-xs font-bold text-slate-400 uppercase tracking-wider">Precio Unitario</th>
+                                        <th className="px-6 py-3.5 text-center text-xs font-bold text-slate-400 uppercase tracking-wider">Origen</th>
+                                        <th className="px-6 py-3.5 text-right text-xs font-bold text-slate-400 uppercase tracking-wider">Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="bg-white divide-y divide-slate-100 text-sm">
+                                    {filteredResources.length > 0 ? (
+                                        filteredResources.map((resource) => (
+                                            <tr key={resource.id} className="hover:bg-slate-50/80 transition">
+                                                <td className="px-6 py-4 font-bold text-slate-900">
+                                                    {resource.name}
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                    <span className={`px-2.5 py-1 inline-flex text-xs font-bold rounded-lg ${
+                                                        resource.type === 'material' ? 'bg-blue-50 text-blue-700 border border-blue-200' :
+                                                        resource.type === 'asset' ? 'bg-amber-50 text-amber-700 border border-amber-200' :
+                                                        'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                                                    }`}>
+                                                        {getTypeLabel(resource.type)}
+                                                    </span>
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-slate-500 font-medium">
+                                                    {resource.use_unit}
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-right font-mono font-extrabold text-slate-900">
+                                                    ${Number(resource.unit_value || 0).toLocaleString(currentDateLocale, { minimumFractionDigits: 2 })}
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-center text-xs">
+                                                    {resource.user_id === null ? (
+                                                        <span className="bg-purple-50 text-purple-700 border border-purple-200 px-2 py-0.5 rounded-md font-bold">Global</span>
+                                                    ) : (
+                                                        <span className="bg-indigo-50 text-indigo-700 border border-indigo-200 px-2 py-0.5 rounded-md font-bold">Personal</span>
+                                                    )}
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-right font-medium">
+                                                    <button
+                                                        onClick={() => startEditing(resource)}
+                                                        className="text-indigo-600 hover:text-indigo-900 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-xl text-xs font-bold transition"
+                                                    >
+                                                        Editar
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        ))
+                                    ) : (
+                                        <tr>
+                                            <td colSpan="6" className="px-6 py-12 text-center text-xs text-slate-400">
+                                                No se encontraron insumos que coincidan con la búsqueda.
                                             </td>
                                         </tr>
-                                    ))
-                                ) : (
-                                    <tr>
-                                        <td colSpan="6" className="px-6 py-10 text-center text-sm text-gray-500">
-                                            No se encontraron insumos que coincidan con la búsqueda.
-                                        </td>
-                                    </tr>
-                                )}
-                            </tbody>
-                        </table>
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
 
                 </div>
