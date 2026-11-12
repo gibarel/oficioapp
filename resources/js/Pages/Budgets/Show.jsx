@@ -1,13 +1,17 @@
 import React from 'react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, Link, useForm, router } from '@inertiajs/react';
-import Badge from '@/Components/Badge';
+import { Head, useForm, router } from '@inertiajs/react';
+import { useTranslation } from '@/Hooks/useTranslation';
 
 export default function Show({ auth, budget }) {
     const { delete: destroy, processing } = useForm();
+    const { t, locale } = useTranslation();
+
+    const dateLocaleMap = { es: 'es-AR', pt: 'pt-BR', en: 'en-US' };
+    const currentDateLocale = dateLocaleMap[locale] || 'es-AR';
 
     const handleDelete = () => {
-        if (confirm(`¿Estás seguro de que deseas eliminar el presupuesto #${budget.budget_number}? Esta acción no se puede deshacer.`)) {
+        if (confirm(t('common.confirmDeleteBudget', { number: budget.budget_number }))) {
             destroy(route('budgets.destroy', budget.id), {
                 onSuccess: () => {
                     window.location.href = route('dashboard');
@@ -16,7 +20,6 @@ export default function Show({ auth, budget }) {
         }
     };
 
-    // Manejar el cambio de estado directamente desde el selector
     const handleStatusChange = (e) => {
         const newStatus = e.target.value;
         router.patch(route('budgets.status.update', budget.id), {
@@ -26,19 +29,11 @@ export default function Show({ auth, budget }) {
         });
     };
 
-    // Traducción y variantes de color para los estados
-    const statusConfig = {
-        draft: { label: 'Pendiente / Borrador', variant: 'default' },
-        accepted: { label: 'Aceptado', variant: 'success' },
-        rejected: { label: 'Rechazado', variant: 'danger' },
-    };
-
-    // Generar enlace dinámico para WhatsApp
     const getWhatsAppShareUrl = () => {
         const cleanPhone = budget.client_phone ? budget.client_phone.replace(/[^0-9]/g, '') : '';
         const publicUrl = route('public.budgets.show', budget.uuid);
         
-        const message = `Hola ${budget.client_name}, te adjunto el presupuesto *#${budget.budget_number}* por un total de *$${Number(budget.total_price || 0).toLocaleString('es-AR')} ${budget.currency}*.\n\nPodés revisarlo y responder directamente desde este enlace:\n${publicUrl}`;
+        const message = `Hola ${budget.client_name}, te adjunto el presupuesto *#${budget.budget_number}* por un total de *$${Number(budget.total_price || 0).toLocaleString(currentDateLocale)} ${budget.currency}*.\n\nPodés revisarlo y responder directamente desde este enlace:\n${publicUrl}`;
         
         return cleanPhone 
             ? `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`
@@ -52,70 +47,67 @@ export default function Show({ auth, budget }) {
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                     <div>
                         <span className="text-xs uppercase tracking-wider text-indigo-600 font-bold bg-indigo-50 px-2.5 py-1 rounded-full">
-                            Detalle de Presupuesto
+                            {t('budgets.detailBadge')}
                         </span>
                         <h2 className="font-bold text-2xl text-slate-800 leading-tight mt-1">
-                            Presupuesto #{budget.budget_number}
+                            {t('budgets.budgetTitle', { number: budget.budget_number })}
                         </h2>
                     </div>
 
                     <div className="flex flex-wrap items-center gap-2">
-                        {/* Botón WhatsApp */}
                         <a
                             href={getWhatsAppShareUrl()}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="px-4 py-2 bg-emerald-600 text-white rounded-xl text-sm font-semibold hover:bg-emerald-500 transition flex items-center gap-1.5 shadow-sm"
                         >
-                            <span>💬 WhatsApp</span>
+                            <span>{t('budgets.whatsappShare')}</span>
                         </a>
 
-                        {/* Botón Descargar PDF */}
                         <a
                             href={route('budgets.pdf', budget.id)}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="px-4 py-2 bg-slate-900 text-white rounded-xl text-sm font-semibold hover:bg-slate-800 transition flex items-center gap-1.5 shadow-sm"
                         >
-                            <span>📄 Descargar PDF</span>
+                            <span>{t('budgets.downloadPdf')}</span>
                         </a>
 
-                        {/* Botón Eliminar Presupuesto */}
                         <button
                             type="button"
                             onClick={handleDelete}
                             disabled={processing}
                             className="px-4 py-2 bg-red-50 text-red-600 border border-red-200 rounded-xl text-sm font-semibold hover:bg-red-100 transition shadow-sm disabled:opacity-50"
                         >
-                            {processing ? 'Eliminando...' : '🗑️ Eliminar'}
+                            {processing ? `🗑️ ${t('common.deleting')}` : `🗑️ ${t('common.delete')}`}
                         </button>
                     </div>
                 </div>
             }
         >
-            <Head title={`Presupuesto ${budget.budget_number}`} />
+            <Head title={t('budgets.budgetTitle', { number: budget.budget_number })} />
 
             <div className="py-8 max-w-3xl mx-auto px-4 sm:px-6 space-y-6">
                 <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-100 shadow-sm space-y-6">
-                    {/* Encabezado del cliente y selector de estado */}
+                    {/* Encabezado */}
                     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-100 pb-5">
                         <div>
                             <span className="text-xs font-mono font-bold text-slate-400">REF: #{budget.budget_number}</span>
                             <h3 className="text-xl font-extrabold text-slate-900 mt-0.5">{budget.client_name}</h3>
                             {budget.client_phone && (
-                                <p className="text-xs text-slate-500 mt-1">Tel: {budget.client_phone}</p>
+                                <p className="text-xs text-slate-500 mt-1">{t('common.phone')}: {budget.client_phone}</p>
                             )}
                             {budget.client_address && (
-                                <p className="text-xs text-slate-500">Dir: {budget.client_address}</p>
+                                <p className="text-xs text-slate-500">{t('common.address')}: {budget.client_address}</p>
                             )}
                             <p className="text-xs text-slate-400 mt-2">
-                                Emisión: {new Date(budget.issued_at || budget.created_at).toLocaleDateString('es-AR')}
+                                {t('common.emissionDate')}: {new Date(budget.issued_at || budget.created_at).toLocaleDateString(currentDateLocale)}
                             </p>
                         </div>
 
                         {/* Selector interactivo de estado */}
                         <div className="flex items-center gap-2">
-                            <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Estado:</span>
+                            <span className="text-xs font-bold uppercase tracking-wider text-slate-400">{t('status.label')}:</span>
                             <select
                                 value={budget.status}
                                 onChange={handleStatusChange}
@@ -125,16 +117,16 @@ export default function Show({ auth, budget }) {
                                     'bg-amber-50 text-amber-800 border-amber-200'
                                 }`}
                             >
-                                <option value="draft">Pendiente / Borrador</option>
-                                <option value="accepted">Aceptado</option>
-                                <option value="rejected">Rechazado</option>
+                                <option value="draft">{t('status.draft')}</option>
+                                <option value="accepted">{t('status.accepted')}</option>
+                                <option value="rejected">{t('status.rejected')}</option>
                             </select>
                         </div>
                     </div>
 
                     {/* Tabla de ítems */}
                     <div className="space-y-3">
-                        <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Ítems Presupuestados</h4>
+                        <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">{t('budgets.budgetedItems')}</h4>
                         <div className="divide-y divide-slate-100">
                             {budget.items && budget.items.length > 0 ? (
                                 budget.items.map((item) => (
@@ -142,24 +134,24 @@ export default function Show({ auth, budget }) {
                                         <div>
                                             <p className="font-semibold text-slate-900">{item.work_name_snapshot || item.description}</p>
                                             <p className="text-xs text-slate-500 mt-0.5">
-                                                Cantidad: {item.quantity} × ${Number(item.unit_price || 0).toLocaleString('es-AR', { minimumFractionDigits: 2 })}
+                                                {t('common.quantity')}: {item.quantity} × ${Number(item.unit_price || 0).toLocaleString(currentDateLocale, { minimumFractionDigits: 2 })}
                                             </p>
                                         </div>
                                         <span className="font-mono font-bold text-slate-900">
-                                            ${Number(item.subtotal_price || item.total_price || 0).toLocaleString('es-AR', { minimumFractionDigits: 2 })}
+                                            ${Number(item.subtotal_price || item.total_price || 0).toLocaleString(currentDateLocale, { minimumFractionDigits: 2 })}
                                         </span>
                                     </div>
                                 ))
                             ) : (
-                                <p className="text-sm text-slate-400 py-4 text-center">No hay ítems registrados en este presupuesto.</p>
+                                <p className="text-sm text-slate-400 py-4 text-center">{t('budgets.noItems')}</p>
                             )}
                         </div>
                     </div>
 
-                    {/* Condiciones de ejecución si existen */}
+                    {/* Condiciones */}
                     {budget.execution_conditions && (
                         <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 text-xs text-slate-600 space-y-1">
-                            <span className="font-bold uppercase tracking-wider text-slate-700 block">Condiciones:</span>
+                            <span className="font-bold uppercase tracking-wider text-slate-700 block">{t('common.conditions')}:</span>
                             <p>{budget.execution_conditions}</p>
                         </div>
                     )}
@@ -167,9 +159,9 @@ export default function Show({ auth, budget }) {
                     {/* Resumen Total */}
                     <div className="pt-4 border-t border-slate-100 flex justify-end">
                         <div className="text-right space-y-1">
-                            <span className="text-xs text-slate-400 uppercase font-bold tracking-wider">Total Presupuestado</span>
+                            <span className="text-xs text-slate-400 uppercase font-bold tracking-wider">{t('budgets.totalBudgeted')}</span>
                             <p className="text-2xl sm:text-3xl font-black font-mono text-slate-900">
-                                ${Number(budget.total_price || 0).toLocaleString('es-AR', { minimumFractionDigits: 2 })} 
+                                ${Number(budget.total_price || 0).toLocaleString(currentDateLocale, { minimumFractionDigits: 2 })} 
                                 <span className="text-sm font-normal text-slate-500 ml-1.5">{budget.currency}</span>
                             </p>
                         </div>
