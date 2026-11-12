@@ -13,7 +13,7 @@ export default function AuthenticatedLayout({ header, children }) {
         useState(false);
 
     return (
-        <div className="min-h-screen bg-gray-100">
+        <div className="min-h-screen flex flex-col bg-gray-100">
             <nav className="border-b border-gray-100 bg-white">
                 <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                     <div className="flex h-16 justify-between">
@@ -171,7 +171,27 @@ export default function AuthenticatedLayout({ header, children }) {
                 </header>
             )}
 
-            <main>{children}</main>
+            <main className="flex-grow">{children}</main>
+
+            {/* Pie de página corporativo perrovaca.com */}
+            <footer className="pt-6 pb-20 sm:pb-8 text-center text-xs text-slate-400">
+                <div className="flex items-center justify-center gap-1.5">
+                    <span className="text-slate-400">Desarrollado por</span>
+                    <a
+                        href="https://www.perrovaca.com"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 font-mono font-bold text-slate-600 hover:text-indigo-600 transition group"
+                    >
+                        <img
+                            src="/images/logo_perrovaca.svg"
+                            alt="perrovaca.com"
+                            className="w-4 h-4 object-contain group-hover:scale-110 transition-transform"
+                        />
+                        <span>perrovaca.com</span>
+                    </a>
+                </div>
+            </footer>
 
             {/* 🟢 Botón flotante de WhatsApp para soporte directo */}
             <a
