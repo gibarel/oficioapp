@@ -1,8 +1,10 @@
 import React from 'react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, useForm } from '@inertiajs/react';
+import { useTranslation } from '@/Hooks/useTranslation';
 
 export default function Create({ auth, works = [] }) {
+    const { t, locale } = useTranslation();
     const { data, setData, post, processing, errors } = useForm({
         client_name: '',
         client_phone: '',
@@ -11,6 +13,9 @@ export default function Create({ auth, works = [] }) {
         execution_conditions: 'Presupuesto válido por 15 días. Pago 50% anticipo y 50% contra entrega.',
         items: [],
     });
+
+    const dateLocaleMap = { es: 'es-AR', pt: 'pt-BR', en: 'en-US' };
+    const currentDateLocale = dateLocaleMap[locale] || 'es-AR';
 
     const handleAddWork = (e) => {
         const workId = e.target.value;
@@ -24,7 +29,6 @@ export default function Create({ auth, works = [] }) {
             return;
         }
 
-        // Tomamos el unit_price calculado (funciona para simple, intermedio y avanzado)
         const unitPrice = Number(work.unit_price) || Number(work.base_price) || 0;
 
         const newItem = {
@@ -67,19 +71,19 @@ export default function Create({ auth, works = [] }) {
     return (
         <AuthenticatedLayout
             user={auth.user}
-            header={<h2 className="font-semibold text-xl text-slate-800 leading-tight">Generar Nuevo Presupuesto</h2>}
+            header={<h2 className="font-semibold text-xl text-slate-800 leading-tight">{t('budgets.createTitle')}</h2>}
         >
-            <Head title="Nuevo Presupuesto" />
+            <Head title={t('budgets.createTitle')} />
 
-            <div className="py-8 max-w-4xl mx-auto sm:px-6 lg:px-8">
+            <div className="py-8 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
                 <form onSubmit={handleSubmit} className="space-y-6">
                     {/* Datos del Cliente */}
                     <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 space-y-4">
-                        <h3 className="text-base font-bold text-slate-800">Datos del Cliente</h3>
+                        <h3 className="text-base font-bold text-slate-800">{t('budgets.clientData')}</h3>
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                             <div>
                                 <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">
-                                    Nombre del Cliente / Firma
+                                    {t('budgets.clientName')}
                                 </label>
                                 <input
                                     type="text"
@@ -94,7 +98,7 @@ export default function Create({ auth, works = [] }) {
 
                             <div>
                                 <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">
-                                    Teléfono de Contacto
+                                    {t('budgets.clientPhone')}
                                 </label>
                                 <input
                                     type="text"
@@ -107,7 +111,7 @@ export default function Create({ auth, works = [] }) {
 
                             <div>
                                 <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">
-                                    Dirección de la Obra/Trabajo
+                                    {t('budgets.clientAddress')}
                                 </label>
                                 <input
                                     type="text"
@@ -122,22 +126,22 @@ export default function Create({ auth, works = [] }) {
 
                     {/* Ítems a Presupuestar */}
                     <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 space-y-4">
-                        <div className="flex justify-between items-center">
-                            <h3 className="text-base font-bold text-slate-800">Ítems a Presupuestar</h3>
+                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                            <h3 className="text-base font-bold text-slate-800">{t('budgets.itemsToBudget')}</h3>
                             <select
                                 onChange={handleAddWork}
                                 defaultValue=""
-                                className="rounded-xl border-slate-200 focus:border-slate-900 focus:ring-slate-900 text-sm py-2 px-3 bg-slate-50 font-medium text-slate-700"
+                                className="w-full sm:w-auto rounded-xl border-slate-200 focus:border-slate-900 focus:ring-slate-900 text-sm py-2 px-3 bg-slate-50 font-medium text-slate-700 cursor-pointer"
                             >
-                                <option value="" disabled>+ Seleccionar Trabajo del Catálogo</option>
+                                <option value="" disabled>{t('budgets.selectWorkPlaceholder')}</option>
                                 {Array.isArray(works) && works.length > 0 ? (
                                     works.map((w) => (
                                         <option key={w.id} value={w.id}>
-                                            {w.name} ({w.reference_unit || 'u.'}) - ${Number(w.unit_price || w.base_price || 0).toFixed(2)}
+                                            {w.name} ({w.reference_unit || 'u.'}) - ${Number(w.unit_price || w.base_price || 0).toLocaleString(currentDateLocale, { minimumFractionDigits: 2 })}
                                         </option>
                                     ))
                                 ) : (
-                                    <option value="" disabled>No hay trabajos en el catálogo</option>
+                                    <option value="" disabled>{t('budgets.noWorksAvailable')}</option>
                                 )}
                             </select>
                         </div>
@@ -147,10 +151,10 @@ export default function Create({ auth, works = [] }) {
                                 <table className="w-full text-left text-sm">
                                     <thead>
                                         <tr className="border-b border-slate-100 text-xs font-bold uppercase text-slate-400">
-                                            <th className="py-2">Trabajo</th>
-                                            <th className="py-2 text-center w-40">Cantidad / Unidad</th>
-                                            <th className="py-2 text-right">Precio Unit.</th>
-                                            <th className="py-2 text-right">Subtotal</th>
+                                            <th className="py-2">{t('dashboard.worksCatalogTitle')}</th>
+                                            <th className="py-2 text-center w-40">{t('common.quantity')} / {t('common.unitPrice').split(' ')[1] || 'Unid.'}</th>
+                                            <th className="py-2 text-right">{t('common.unitPrice')}</th>
+                                            <th className="py-2 text-right">{t('common.subtotal')}</th>
                                             <th className="py-2 text-right"></th>
                                         </tr>
                                     </thead>
@@ -171,15 +175,19 @@ export default function Create({ auth, works = [] }) {
                                                         <span className="text-xs font-bold text-slate-500 uppercase">{item.unit}</span>
                                                     </div>
                                                 </td>
-                                                <td className="py-3 text-right text-slate-600">${Number(item.unit_price || 0).toFixed(2)}</td>
-                                                <td className="py-3 text-right font-bold text-slate-900">${Number(item.total_price || 0).toFixed(2)}</td>
+                                                <td className="py-3 text-right text-slate-600 font-mono">
+                                                    ${Number(item.unit_price || 0).toLocaleString(currentDateLocale, { minimumFractionDigits: 2 })}
+                                                </td>
+                                                <td className="py-3 text-right font-bold text-slate-900 font-mono">
+                                                    ${Number(item.total_price || 0).toLocaleString(currentDateLocale, { minimumFractionDigits: 2 })}
+                                                </td>
                                                 <td className="py-3 text-right">
                                                     <button
                                                         type="button"
                                                         onClick={() => handleRemoveItem(index)}
                                                         className="text-xs font-semibold text-red-500 hover:text-red-700"
                                                     >
-                                                        Quitar
+                                                        {t('common.remove')}
                                                     </button>
                                                 </td>
                                             </tr>
@@ -189,14 +197,16 @@ export default function Create({ auth, works = [] }) {
 
                                 <div className="flex justify-end pt-4 border-t border-slate-100">
                                     <div className="text-right">
-                                        <span className="text-xs text-slate-400 uppercase font-bold tracking-wider">Total Estimado</span>
-                                        <p className="text-2xl font-extrabold text-slate-900">${Number(calculatedSubtotal || 0).toFixed(2)}</p>
+                                        <span className="text-xs text-slate-400 uppercase font-bold tracking-wider">{t('budgets.estimatedTotal')}</span>
+                                        <p className="text-2xl font-extrabold font-mono text-slate-900">
+                                            ${Number(calculatedSubtotal || 0).toLocaleString(currentDateLocale, { minimumFractionDigits: 2 })}
+                                        </p>
                                     </div>
                                 </div>
                             </div>
                         ) : (
                             <div className="text-center py-8 text-slate-400 text-sm border-2 border-dashed border-slate-100 rounded-xl">
-                                Seleccioná un trabajo del catálogo arriba para comenzar a presupuestar.
+                                {t('budgets.emptyItemsPrompt')}
                             </div>
                         )}
                     </div>
@@ -205,9 +215,9 @@ export default function Create({ auth, works = [] }) {
                         <button
                             type="submit"
                             disabled={processing || data.items.length === 0}
-                            className="px-6 py-3 bg-indigo-600 text-white font-semibold rounded-xl hover:bg-indigo-700 transition disabled:opacity-50 shadow-sm"
+                            className="w-full sm:w-auto px-6 py-3 bg-indigo-600 text-white font-semibold rounded-xl hover:bg-indigo-700 transition disabled:opacity-50 shadow-sm"
                         >
-                            Generar y Emitir Presupuesto
+                            {t('common.saveAndIssue')}
                         </button>
                     </div>
                 </form>
