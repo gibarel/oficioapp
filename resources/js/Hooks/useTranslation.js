@@ -4,28 +4,23 @@ import { translations } from '@/i18n/translations';
 export function useTranslation() {
     const { props } = usePage();
     
-    // Verificamos el idioma de la prop o usuario, y comprobamos que exista en el diccionario. Si no, forzamos 'es'.
-    const rawLocale = props.locale || props.auth?.user?.locale;
-    const locale = (rawLocale && translations[rawLocale]) ? rawLocale : 'es';
+    // Forzamos 'es' directamente para descartar problemas con las props de Inertia por ahora
+    const locale = 'es'; 
 
     const t = (key, replacements = {}) => {
         const keys = key.split('.');
-        let value = translations[locale] || translations['es'];
-
+        
+        // Buscamos primero en español, si no en el locale actual
+        let value = translations['es'];
         for (const k of keys) {
             value = value?.[k];
         }
 
-        // Fallback al español si la clave no existe en el idioma actual
+        // Si aún así no se encuentra, devolvemos la llave para identificarla
         if (!value) {
-            let fallback = translations['es'];
-            for (const k of keys) {
-                fallback = fallback?.[k];
-            }
-            value = fallback || key;
+            return key;
         }
 
-        // Reemplazo de variables dinámicas (ej: {number})
         if (typeof value === 'string') {
             Object.keys(replacements).forEach((placeholder) => {
                 value = value.replace(`{${placeholder}}`, replacements[placeholder]);

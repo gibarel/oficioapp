@@ -9,9 +9,13 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\TransactionController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
+use Illuminate\Support\Facades\Auth;
 
-// Ruta de bienvenida pública
+// Ruta raíz: Si está logueado va directo al dashboard, sino muestra la bienvenida
 Route::get('/', function () {
+    if (Auth::check()) {
+        return redirect()->route('dashboard');
+    }
     return Inertia::render('Welcome');
 });
 
@@ -42,7 +46,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // PDF de Presupuestos
     Route::get('/budgets/{budget}/pdf', [BudgetController::class, 'downloadPdf'])->name('budgets.pdf');
 
-    //Estado del Presupuesto
+    // Estado del Presupuesto
     Route::patch('/budgets/{budget}/status', [BudgetController::class, 'updateStatus'])->name('budgets.status.update');
 });
 
