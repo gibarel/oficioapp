@@ -4,8 +4,9 @@ import { translations } from '@/i18n/translations';
 export function useTranslation() {
     const { props } = usePage();
     
-    // Forzamos 'es' por defecto si el usuario o la app no tienen un idioma definido aún
-    const locale = props.locale || props.auth?.user?.locale || 'es';
+    // Verificamos el idioma de la prop o usuario, y comprobamos que exista en el diccionario. Si no, forzamos 'es'.
+    const rawLocale = props.locale || props.auth?.user?.locale;
+    const locale = (rawLocale && translations[rawLocale]) ? rawLocale : 'es';
 
     const t = (key, replacements = {}) => {
         const keys = key.split('.');
