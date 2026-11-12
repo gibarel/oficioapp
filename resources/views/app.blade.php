@@ -7,13 +7,13 @@
         <title inertia>{{ config('app.name', 'Laravel') }}</title>
 
         <!-- Google tag (gtag.js) - GA4 -->
-        <script async src="https://www.googletagmanager.com/gtag/js?id=G-4K0PPVQYNX"></script>
+        <script async src="https://www.googletagmanager.com/gtag/js?id=G-RJXBEGQJKX"></script>
         <script>
           window.dataLayer = window.dataLayer || [];
           function gtag(){dataLayer.push(arguments);}
           gtag('js', new Date());
 
-          gtag('config', 'G-4K0PPVQYNX', {
+          gtag('config', 'G-RJXBEGQJKX', {
             send_page_view: false
           });
         </script>
