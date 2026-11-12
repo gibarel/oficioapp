@@ -1,6 +1,6 @@
 import React from 'react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, Link, useForm } from '@inertiajs/react';
+import { Head, Link, useForm, router } from '@inertiajs/react';
 import Badge from '@/Components/Badge';
 
 export default function Show({ auth, budget }) {
@@ -14,6 +14,23 @@ export default function Show({ auth, budget }) {
                 },
             });
         }
+    };
+
+    // Manejar el cambio de estado directamente desde el selector
+    const handleStatusChange = (e) => {
+        const newStatus = e.target.value;
+        router.patch(route('budgets.status.update', budget.id), {
+            status: newStatus,
+        }, {
+            preserveScroll: true,
+        });
+    };
+
+    // Traducción y variantes de color para los estados
+    const statusConfig = {
+        draft: { label: 'Pendiente / Borrador', variant: 'default' },
+        accepted: { label: 'Aceptado', variant: 'success' },
+        rejected: { label: 'Rechazado', variant: 'danger' },
     };
 
     // Generar enlace dinámico para WhatsApp
@@ -80,8 +97,8 @@ export default function Show({ auth, budget }) {
 
             <div className="py-8 max-w-3xl mx-auto px-4 sm:px-6 space-y-6">
                 <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-100 shadow-sm space-y-6">
-                    {/* Encabezado del cliente */}
-                    <div className="flex justify-between items-start border-b border-slate-100 pb-5">
+                    {/* Encabezado del cliente y selector de estado */}
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-100 pb-5">
                         <div>
                             <span className="text-xs font-mono font-bold text-slate-400">REF: #{budget.budget_number}</span>
                             <h3 className="text-xl font-extrabold text-slate-900 mt-0.5">{budget.client_name}</h3>
@@ -95,9 +112,24 @@ export default function Show({ auth, budget }) {
                                 Emisión: {new Date(budget.issued_at || budget.created_at).toLocaleDateString('es-AR')}
                             </p>
                         </div>
-                        <Badge variant={budget.status === 'accepted' ? 'success' : budget.status === 'rejected' ? 'danger' : 'default'}>
-                            {budget.status}
-                        </Badge>
+
+                        {/* Selector interactivo de estado */}
+                        <div className="flex items-center gap-2">
+                            <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Estado:</span>
+                            <select
+                                value={budget.status}
+                                onChange={handleStatusChange}
+                                className={`text-xs font-bold uppercase py-1.5 px-3 rounded-xl border focus:ring-2 focus:ring-indigo-500 transition cursor-pointer ${
+                                    budget.status === 'accepted' ? 'bg-emerald-50 text-emerald-800 border-emerald-200' :
+                                    budget.status === 'rejected' ? 'bg-red-50 text-red-800 border-red-200' :
+                                    'bg-amber-50 text-amber-800 border-amber-200'
+                                }`}
+                            >
+                                <option value="draft">Pendiente / Borrador</option>
+                                <option value="accepted">Aceptado</option>
+                                <option value="rejected">Rechazado</option>
+                            </select>
+                        </div>
                     </div>
 
                     {/* Tabla de ítems */}

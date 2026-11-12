@@ -41,6 +41,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     
     // PDF de Presupuestos
     Route::get('/budgets/{budget}/pdf', [BudgetController::class, 'downloadPdf'])->name('budgets.pdf');
+
+    //Estado del Presupuesto
+    Route::patch('/budgets/{budget}/status', [BudgetController::class, 'updateStatus'])->name('budgets.status.update');
 });
 
 require __DIR__.'/auth.php';

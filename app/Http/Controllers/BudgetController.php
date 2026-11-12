@@ -173,4 +173,22 @@ class BudgetController extends Controller
         // Redirigir al dashboard en lugar de a budgets.index
         return redirect()->route('dashboard')->with('success', 'Presupuesto eliminado correctamente.');
     }
+
+    public function updateStatus(Request $request, Budget $budget)
+    {
+        // Validar que pertenezca al usuario
+        if ($budget->user_id !== auth()->id()) {
+            abort(403, 'No autorizado.');
+        }
+
+        $validated = $request->validate([
+            'status' => 'required|in:draft,accepted,rejected',
+        ]);
+
+        $budget->update([
+            'status' => $validated['status'],
+        ]);
+
+        return back()->with('success', 'Estado del presupuesto actualizado correctamente.');
+    }
 }
