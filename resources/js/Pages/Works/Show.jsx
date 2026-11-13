@@ -1,8 +1,13 @@
 import React from 'react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link } from '@inertiajs/react';
+import { useTranslation } from '@/Hooks/useTranslation';
 
 export default function Show({ auth, work, calculation }) {
+    const { t, locale } = useTranslation();
+    const dateLocaleMap = { es: 'es-AR', pt: 'pt-BR', en: 'en-US' };
+    const currentDateLocale = dateLocaleMap[locale] || 'es-AR';
+
     const calc = calculation || {
         subtotal_cost: work.base_price || 0,
         contingency_amount: 0,
@@ -72,7 +77,7 @@ export default function Show({ auth, work, calculation }) {
                     <div>
                         <span className="text-xs uppercase tracking-widest text-indigo-300 font-bold">Precio Sugerido de Venta</span>
                         <p className="text-3xl sm:text-4xl font-black font-mono mt-1">
-                            ${Number(calc.unit_price || 0).toLocaleString('es-AR', { minimumFractionDigits: 2 })}
+                            ${Number(calc.unit_price || 0).toLocaleString(currentDateLocale, { minimumFractionDigits: 2 })}
                             <span className="text-sm font-normal text-indigo-200 ml-2">por {work.reference_unit || 'unidad'}</span>
                         </p>
                         <p className="text-xs text-slate-300 mt-2">
@@ -82,7 +87,7 @@ export default function Show({ auth, work, calculation }) {
                     <div className="bg-white/10 backdrop-blur-md px-5 py-4 rounded-2xl border border-white/10 text-right w-full sm:w-auto">
                         <span className="text-xs text-indigo-200 block">Costo Neto Total</span>
                         <span className="text-xl font-bold font-mono text-white">
-                            ${Number(calc.subtotal_cost || (laborSubtotal + materialSubtotal)).toLocaleString('es-AR', { minimumFractionDigits: 2 })}
+                            ${Number(calc.subtotal_cost || (laborSubtotal + materialSubtotal)).toLocaleString(currentDateLocale, { minimumFractionDigits: 2 })}
                         </span>
                     </div>
                 </div>
@@ -96,7 +101,7 @@ export default function Show({ auth, work, calculation }) {
                         <div>
                             <span className="text-xs text-slate-400 font-bold uppercase tracking-wider">Mano de Obra / Esfuerzo</span>
                             <p className="text-xl font-bold text-slate-800 font-mono mt-0.5">
-                                ${Number(laborSubtotal).toLocaleString('es-AR', { minimumFractionDigits: 2 })}
+                                ${Number(laborSubtotal).toLocaleString(currentDateLocale, { minimumFractionDigits: 2 })}
                             </p>
                         </div>
                     </div>
@@ -108,7 +113,7 @@ export default function Show({ auth, work, calculation }) {
                         <div>
                             <span className="text-xs text-slate-400 font-bold uppercase tracking-wider">Materiales e Insumos</span>
                             <p className="text-xl font-bold text-slate-800 font-mono mt-0.5">
-                                ${Number(materialSubtotal).toLocaleString('es-AR', { minimumFractionDigits: 2 })}
+                                ${Number(materialSubtotal).toLocaleString(currentDateLocale, { minimumFractionDigits: 2 })}
                             </p>
                         </div>
                     </div>
@@ -122,21 +127,21 @@ export default function Show({ auth, work, calculation }) {
                         <div className="p-4 bg-slate-50 rounded-xl">
                             <span className="text-xs text-slate-500 block font-medium">Costo Base Acumulado</span>
                             <p className="text-lg font-bold text-slate-800 font-mono mt-1">
-                                ${Number(calc.subtotal_cost || 0).toLocaleString('es-AR', { minimumFractionDigits: 2 })}
+                                ${Number(calc.subtotal_cost || 0).toLocaleString(currentDateLocale, { minimumFractionDigits: 2 })}
                             </p>
                         </div>
                         
                         <div className="p-4 bg-slate-50 rounded-xl">
                             <span className="text-xs text-slate-500 block font-medium">Colchón de Imprevistos ({work.contingency_percentage}%)</span>
                             <p className="text-lg font-bold text-amber-600 font-mono mt-1">
-                                + ${Number(calc.contingency_amount || 0).toLocaleString('es-AR', { minimumFractionDigits: 2 })}
+                                + ${Number(calc.contingency_amount || 0).toLocaleString(currentDateLocale, { minimumFractionDigits: 2 })}
                             </p>
                         </div>
 
                         <div className="p-4 bg-slate-50 rounded-xl">
                             <span className="text-xs text-slate-500 block font-medium">Tu Margen de Ganancia ({work.profit_margin_percentage}%)</span>
                             <p className="text-lg font-bold text-emerald-600 font-mono mt-1">
-                                + ${Number(calc.profit_amount || 0).toLocaleString('es-AR', { minimumFractionDigits: 2 })}
+                                + ${Number(calc.profit_amount || 0).toLocaleString(currentDateLocale, { minimumFractionDigits: 2 })}
                             </p>
                         </div>
                     </div>
@@ -149,6 +154,7 @@ export default function Show({ auth, work, calculation }) {
                         <div className="divide-y divide-slate-100">
                             {work.resources.map((res) => {
                                 const qty = res.pivot.quantity;
+                                const unit = res.pivot.unit || 'u'; // 👈 Unidad dinámica guardada en el pivot
                                 const unitVal = res.pivot.custom_unit_value || res.unit_value;
                                 const subtotal = qty * unitVal;
                                 const isLabor = res.type === 'labor';
@@ -162,13 +168,13 @@ export default function Show({ auth, work, calculation }) {
                                             <div>
                                                 <p className="font-semibold text-slate-800">{res.name}</p>
                                                 <p className="text-xs text-slate-500 mt-0.5">
-                                                    Cantidad: {qty} × ${Number(unitVal).toLocaleString('es-AR', { minimumFractionDigits: 2 })}
+                                                    Cantidad: {qty} {unit} × ${Number(unitVal).toLocaleString(currentDateLocale, { minimumFractionDigits: 2 })}
                                                 </p>
                                             </div>
                                         </div>
                                         <div className="text-right">
                                             <p className="font-bold text-slate-900 font-mono">
-                                                ${Number(subtotal).toLocaleString('es-AR', { minimumFractionDigits: 2 })}
+                                                ${Number(subtotal).toLocaleString(currentDateLocale, { minimumFractionDigits: 2 })}
                                             </p>
                                         </div>
                                     </div>
