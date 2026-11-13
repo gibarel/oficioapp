@@ -35,16 +35,17 @@ class Work extends Model
         return $this->belongsTo(User::class);
     }
 
-   public function resources(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    public function resources(): BelongsToMany
     {
-    return $this->belongsToMany(Resource::class, 'work_resource')
-        ->withPivot([
-            'quantity',
-            'custom_unit_value',
-            'allocation_type',
-            'allocation_value',
-            'is_client_provided',
-        ])
-        ->withTimestamps();
+        return $this->belongsToMany(Resource::class, 'work_resource')
+            ->withPivot([
+                'quantity',
+                'unit', // 👈 ¡Campo agregado para manejar la unidad dinámica por recurso!
+                'custom_unit_value',
+                'allocation_type',
+                'allocation_value',
+                'is_client_provided',
+            ])
+            ->withTimestamps();
     }
 }

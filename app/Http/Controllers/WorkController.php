@@ -49,6 +49,7 @@ class WorkController extends Controller
             'resources' => 'array',
             'resources.*.id' => 'exists:resources,id',
             'resources.*.quantity' => 'required|numeric|min:0.01',
+            'resources.*.unit' => 'required|string|max:50', // 👈 Validación de la unidad dinámica
             'resources.*.custom_unit_value' => 'nullable|numeric|min:0',
             'resources.*.allocation_type' => 'required|in:direct,hourly_rate,percentage_share,fixed_estimate',
             'resources.*.allocation_value' => 'nullable|numeric|min:0',
@@ -71,13 +72,15 @@ class WorkController extends Controller
             foreach ($validated['resources'] as $res) {
                 $pivotData[$res['id']] = [
                     'quantity' => $res['quantity'],
+                    'unit' => $res['unit'] ?? 'u', // 👈 Guardamos la unidad elegida en la tabla pivote
                     'custom_unit_value' => $res['custom_unit_value'] ?? null,
                     'allocation_type' => $res['allocation_type'] ?? 'direct',
                     'allocation_value' => $res['allocation_value'] ?? null,
                     'is_client_provided' => $res['is_client_provided'] ?? false,
                 ];
             }
-            $work->resources()->attach($pivotData);
+            // Usamos sync en lugar de attach para guardar el array completo limpiamente
+            $work->resources()->sync($pivotData);
         }
 
         return redirect()->route('works.index')->with('success', 'Trabajo guardado correctamente.');
@@ -127,6 +130,7 @@ class WorkController extends Controller
             'resources' => 'array',
             'resources.*.id' => 'exists:resources,id',
             'resources.*.quantity' => 'required|numeric|min:0.01',
+            'resources.*.unit' => 'required|string|max:50', // 👈 Validación de la unidad dinámica en actualización
             'resources.*.custom_unit_value' => 'nullable|numeric|min:0',
             'resources.*.allocation_type' => 'required|in:direct,hourly_rate,percentage_share,fixed_estimate',
             'resources.*.allocation_value' => 'nullable|numeric|min:0',
@@ -149,6 +153,7 @@ class WorkController extends Controller
             foreach ($validated['resources'] as $res) {
                 $pivotData[$res['id']] = [
                     'quantity' => $res['quantity'],
+                    'unit' => $res['unit'] ?? 'u', // 👈 Sincronizamos la unidad elegida
                     'custom_unit_value' => $res['custom_unit_value'] ?? null,
                     'allocation_type' => $res['allocation_type'] ?? 'direct',
                     'allocation_value' => $res['allocation_value'] ?? null,

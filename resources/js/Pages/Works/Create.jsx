@@ -36,6 +36,7 @@ export default function Create({ auth, resources = [] }) {
             id: resource.id,
             name: resource.name,
             type: resource.type,
+            unit: resource.type === 'labor' ? 'hora' : 'u',
             quantity: 1,
             custom_unit_value: resource.unit_value || 0,
             allocation_type: 'direct',
@@ -173,8 +174,8 @@ export default function Create({ auth, resources = [] }) {
                                 <div className="space-y-3">
                                     {data.resources.map((res, index) => (
                                         <div key={res.id} className="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-3">
-                                            <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
-                                                <div className="w-full sm:w-1/3">
+                                            <div className="flex flex-col sm:flex-row gap-3 items-center justify-between">
+                                                <div className="w-full sm:w-1/4">
                                                     <span className="font-semibold text-slate-800 text-sm block">{res.name}</span>
                                                     <span className={`inline-block text-[10px] uppercase font-bold px-2 py-0.5 rounded-md mt-1 ${
                                                         res.type === 'labor' ? 'bg-amber-100 text-amber-800' :
@@ -184,10 +185,32 @@ export default function Create({ auth, resources = [] }) {
                                                         {res.type === 'labor' ? '👷 Mano de Obra' : res.type === 'asset' ? '🛠️ Herramienta' : '📦 Material'}
                                                     </span>
                                                 </div>
+
+                                                <div className="w-full sm:w-1/4">
+                                                    <label className="block text-[10px] uppercase font-bold text-slate-500 mb-1">
+                                                        Unidad del Insumo
+                                                    </label>
+                                                    <select
+                                                        value={res.unit}
+                                                        onChange={(e) => handleResourceChange(index, 'unit', e.target.value)}
+                                                        className="w-full rounded-xl border-slate-200 text-xs py-2 bg-white font-medium focus:border-indigo-600 focus:ring-indigo-600"
+                                                    >
+                                                        <option value="u">Unidad (u.)</option>
+                                                        <option value="m2">Metro cuadrado (m2)</option>
+                                                        <option value="m3">Metro cúbico (m3)</option>
+                                                        <option value="ml">Metro lineal (ml)</option>
+                                                        <option value="kg">Kilogramo (kg)</option>
+                                                        <option value="l">Litro (l)</option>
+                                                        <option value="bolsa">Bolsa</option>
+                                                        <option value="hora">Hora (h)</option>
+                                                        <option value="jornal">Jornal</option>
+                                                        <option value="global">Global / Fijo</option>
+                                                    </select>
+                                                </div>
                                                 
-                                                <div className="w-full sm:w-1/3">
+                                                <div className="w-full sm:w-1/4">
                                                     <label className="block text-[10px] uppercase font-bold text-indigo-600 mb-1">
-                                                        Consumo por 1 {data.reference_unit || 'u.'}
+                                                        Cant. ({res.unit}) por 1 {data.reference_unit || 'u.'}
                                                     </label>
                                                     <input
                                                         type="number"
@@ -199,7 +222,7 @@ export default function Create({ auth, resources = [] }) {
                                                     />
                                                 </div>
 
-                                                <div className="w-full sm:w-1/4">
+                                                <div className="w-full sm:w-1/5">
                                                     <label className="block text-[10px] uppercase font-bold text-slate-400 mb-1">Valor Unit. ($)</label>
                                                     <input
                                                         type="number"
@@ -215,8 +238,9 @@ export default function Create({ auth, resources = [] }) {
                                                         type="button"
                                                         onClick={() => handleRemoveResource(index)}
                                                         className="text-red-500 hover:text-red-700 text-xs font-semibold px-2 py-1"
+                                                        title="Quitar recurso"
                                                     >
-                                                        🗑️ Quitar
+                                                        🗑️
                                                     </button>
                                                 </div>
                                             </div>

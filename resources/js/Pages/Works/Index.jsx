@@ -31,12 +31,30 @@ export default function Index({ auth, works }) {
                             href={route('works.show', work.id)}
                             className="bg-white p-5 rounded-2xl border border-slate-100 hover:border-slate-300 transition shadow-sm block space-y-3"
                         >
-                            <div className="flex justify-between items-start">
+                            <div className="flex justify-between items-start gap-2">
                                 <h3 className="font-bold text-slate-900 text-base">{work.name}</h3>
-                                <span className="text-[10px] font-semibold px-2 py-0.5 bg-slate-100 text-slate-600 rounded-md uppercase">
+                                <span className="shrink-0 text-[10px] font-semibold px-2 py-0.5 bg-slate-100 text-slate-600 rounded-md uppercase">
                                     {work.reference_unit}
                                 </span>
                             </div>
+
+                            {work.resources && work.resources.length > 0 && (
+                                <div className="flex flex-wrap gap-1.5">
+                                    {work.resources.slice(0, 3).map((res) => (
+                                        <span
+                                            key={res.id}
+                                            className="text-[11px] bg-slate-50 text-slate-600 border border-slate-200/70 px-2 py-0.5 rounded-md"
+                                        >
+                                            {res.name} ({Number(res.pivot?.quantity || 0)} {res.pivot?.unit || 'u'})
+                                        </span>
+                                    ))}
+                                    {work.resources.length > 3 && (
+                                        <span className="text-[11px] text-slate-400 px-1 py-0.5">
+                                            +{work.resources.length - 3} más
+                                        </span>
+                                    )}
+                                </div>
+                            )}
 
                             <div className="flex justify-between items-end pt-2 border-t border-slate-50 text-xs">
                                 <span className="text-slate-400">
