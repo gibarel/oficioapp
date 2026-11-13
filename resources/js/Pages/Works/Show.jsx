@@ -8,6 +8,14 @@ export default function Show({ auth, work, calculation }) {
     const dateLocaleMap = { es: 'es-AR', pt: 'pt-BR', en: 'en-US' };
     const currentDateLocale = dateLocaleMap[locale] || 'es-AR';
 
+    // Función auxiliar para formatear números de forma limpia (hasta 3 decimales solo si es necesario, evitando ceros sobrantes)
+    const formatQty = (value) => {
+        return Number(value || 0).toLocaleString(currentDateLocale, {
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 3,
+        });
+    };
+
     const calc = calculation || {
         subtotal_cost: work.base_price || 0,
         contingency_amount: 0,
@@ -154,7 +162,7 @@ export default function Show({ auth, work, calculation }) {
                         <div className="divide-y divide-slate-100">
                             {work.resources.map((res) => {
                                 const qty = res.pivot.quantity;
-                                const unit = res.pivot.unit || 'u'; // 👈 Unidad dinámica guardada en el pivot
+                                const unit = res.pivot.unit || 'u';
                                 const unitVal = res.pivot.custom_unit_value || res.unit_value;
                                 const subtotal = qty * unitVal;
                                 const isLabor = res.type === 'labor';
@@ -168,7 +176,7 @@ export default function Show({ auth, work, calculation }) {
                                             <div>
                                                 <p className="font-semibold text-slate-800">{res.name}</p>
                                                 <p className="text-xs text-slate-500 mt-0.5">
-                                                    Cantidad: {qty} {unit} × ${Number(unitVal).toLocaleString(currentDateLocale, { minimumFractionDigits: 2 })}
+                                                    Cantidad: {formatQty(qty)} {unit} × ${Number(unitVal).toLocaleString(currentDateLocale, { minimumFractionDigits: 2 })}
                                                 </p>
                                             </div>
                                         </div>
