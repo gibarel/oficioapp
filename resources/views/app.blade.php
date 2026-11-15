@@ -28,7 +28,7 @@
         @vite(['resources/js/app.jsx', "resources/js/Pages/{$page['component']}.jsx"])
         @inertiaHead
 
-        <link rel="icon" type="image/svg+xml" href="/octogono.png">
+        <link rel="icon" type="image/svg+xml" href="/favicon.svg">
     </head>
     <body class="font-sans antialiased">
         @inertia
