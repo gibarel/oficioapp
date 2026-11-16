@@ -1,7 +1,7 @@
 import PrimaryButton from '@/Components/PrimaryButton';
 import GuestLayout from '@/Layouts/GuestLayout';
 import { Head, Link, useForm } from '@inertiajs/react';
-import { useTranslation } from '@/i18n/useTranslation';
+import { useTranslation } from '@/Hooks/useTranslation';
 
 export default function VerifyEmail({ status }) {
     const { t } = useTranslation();

@@ -5,7 +5,7 @@ import PrimaryButton from '@/Components/PrimaryButton';
 import TextInput from '@/Components/TextInput';
 import GuestLayout from '@/Layouts/GuestLayout';
 import { Head, Link, useForm } from '@inertiajs/react';
-import { useTranslation } from '@/i18n/useTranslation'; 
+import { useTranslation } from '@/Hooks/useTranslation';
 
 export default function Login({ status, canResetPassword }) {
     const { t } = useTranslation(); 
