@@ -60,7 +60,32 @@ export const translations = {
             noWorksAvailable: 'No hay trabajos en el catálogo',
             emptyItemsPrompt: 'Seleccioná un trabajo del catálogo arriba para comenzar a presupuestar.',
             estimatedTotal: 'Total Estimado',
-        }
+        },
+        auth: {
+            loginTitle: 'Iniciar Sesión',
+            registerTitle: 'Registro',
+            forgotPasswordTitle: 'Recuperar Contraseña',
+            resetPasswordTitle: 'Restablecer Contraseña',
+            verifyEmailTitle: 'Verificación de Correo',
+            confirmPasswordTitle: 'Confirmar Contraseña',
+            email: 'Correo electrónico',
+            password: 'Contraseña',
+            confirmPassword: 'Confirmar contraseña',
+            name: 'Nombre y Apellido',
+            rememberMe: 'Recordarme',
+            forgotPasswordLink: '¿Olvidaste tu contraseña?',
+            loginButton: 'Ingresar',
+            registerButton: 'Registrarse',
+            alreadyRegistered: '¿Ya estás registrado?',
+            forgotPasswordDesc: '¿Olvidaste tu contraseña? No hay problema. Ingresá tu correo electrónico y te enviaremos un enlace de recuperación.',
+            sendResetLink: 'Enviar enlace de recuperación',
+            resetPasswordButton: 'Restablecer contraseña',
+            verifyEmailDesc: '¡Gracias por registrarte! Antes de empezar, ¿podrías verificar tu correo haciendo clic en el enlace que te enviamos?',
+            resendVerification: 'Reenviar correo de verificación',
+            logout: 'Cerrar sesión',
+            confirmPasswordDesc: 'Esta es un área segura de la aplicación. Por favor confirma tu contraseña antes de continuar.',
+            confirmButton: 'Confirmar',
+            }
     },
     pt: {
         common: {
