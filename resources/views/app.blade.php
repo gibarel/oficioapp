@@ -4,7 +4,7 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
 
-        <title inertia>{{ config('app.name', 'Laravel') }}</title>
+        <title inertia>{{ config('app.name', 'OficioApp') }}</title>
 
         <!-- Google tag (gtag.js) - GA4 -->
         <script async src="https://www.googletagmanager.com/gtag/js?id=G-RJXBEGQJKX"></script>
