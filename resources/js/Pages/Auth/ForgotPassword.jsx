@@ -19,7 +19,7 @@ export default function ForgotPassword({ status }) {
 
     return (
         <GuestLayout>
-            <Head title={t('auth.forgotPasswordTitle')} />
+           <Head title="OficioApp" />
 
             <div className="mb-4 text-sm text-gray-600">
                 {t('auth.forgotPasswordDesc')}

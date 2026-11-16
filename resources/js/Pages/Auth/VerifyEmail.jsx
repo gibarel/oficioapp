@@ -15,7 +15,7 @@ export default function VerifyEmail({ status }) {
 
     return (
         <GuestLayout>
-            <Head title={t('auth.verifyEmailTitle')} />
+             <Head title="OficioApp" />
 
             <div className="mb-4 text-sm text-gray-600">
                 {t('auth.verifyEmailDesc')}

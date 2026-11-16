@@ -25,7 +25,7 @@ export default function ResetPassword({ token, email }) {
 
     return (
         <GuestLayout>
-            <Head title={t('auth.resetPasswordTitle')} />
+            <Head title="OficioApp" />
 
             <form onSubmit={submit}>
                 <div>

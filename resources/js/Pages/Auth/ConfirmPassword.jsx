@@ -22,7 +22,7 @@ export default function ConfirmPassword() {
 
     return (
         <GuestLayout>
-            <Head title={t('auth.confirmPasswordTitle')} />
+            <Head title="OficioApp" />
 
             <div className="mb-4 text-sm text-gray-600">
                 {t('auth.confirmPasswordDesc')}

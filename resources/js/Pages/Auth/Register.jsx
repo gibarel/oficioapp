@@ -25,7 +25,7 @@ export default function Register() {
 
     return (
         <GuestLayout>
-            <Head title={t('auth.registerTitle')} />
+            <Head title="OficioApp" />
 
             <form onSubmit={submit}>
                 <div>

@@ -24,7 +24,7 @@ export default function Login({ status, canResetPassword }) {
 
     return (
         <GuestLayout>
-            <Head title={t('auth.loginTitle')} />
+            <Head title="Iniciar Sesión — OficioApp" />
 
             {status && (
                 <div className="mb-4 text-sm font-medium text-green-600">

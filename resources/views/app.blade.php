@@ -4,6 +4,10 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
 
+        <!-- Favicon personalizado al inicio para que el navegador lo tome de inmediato -->
+        <link rel="icon" type="image/x-icon" href="/favicon.ico">
+        <link rel="shortcut icon" href="/favicon.ico">
+
         <title inertia>{{ config('app.name', 'OficioApp') }}</title>
 
         <!-- Google tag (gtag.js) - GA4 -->
@@ -27,8 +31,6 @@
         @viteReactRefresh
         @vite(['resources/js/app.jsx', "resources/js/Pages/{$page['component']}.jsx"])
         @inertiaHead
-
-        <link rel="icon" type="image/x-icon" href="/favicon.ico">
     </head>
     <body class="font-sans antialiased">
         @inertia
