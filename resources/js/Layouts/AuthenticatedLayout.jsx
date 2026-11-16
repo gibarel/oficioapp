@@ -42,7 +42,7 @@ export default function AuthenticatedLayout({ header, children }) {
                         <div className="flex items-center gap-8">
                             <Link href={route('dashboard')} className="flex items-center gap-2">
                                 <ApplicationLogo className="block h-8 w-auto fill-current text-slate-900" />
-                                <span className="font-bold text-slate-900 tracking-tight">OficioApp</span>
+                                
                             </Link>
 
                             <div className="hidden sm:flex sm:space-x-6">
