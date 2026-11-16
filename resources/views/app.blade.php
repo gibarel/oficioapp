@@ -8,7 +8,7 @@
         <link rel="icon" type="image/x-icon" href="/images/favicon.ico">
         <link rel="shortcut icon" href="/images/favicon.ico">
 
-        <title inertia>{{ config('app.name', 'OficioApp') }}</title>
+        <title>OficioApp</title>
 
         <!-- Google tag (gtag.js) - GA4 -->
         <script async src="https://www.googletagmanager.com/gtag/js?id=G-RJXBEGQJKX"></script>
