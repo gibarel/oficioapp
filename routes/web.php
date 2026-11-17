@@ -7,10 +7,11 @@ use App\Http\Controllers\WorkController;
 use App\Http\Controllers\PublicBudgetController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\TransactionController;
+use App\Http\Controllers\GeminiAIController;
+use App\Http\Controllers\GeminiAssistantController; // <-- ¡Importación agregada!
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Auth;
-use App\Http\Controllers\GeminiAIController;
 
 // Ruta raíz: Si está logueado va directo al dashboard, sino muestra la bienvenida
 Route::get('/', function () {
@@ -50,10 +51,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Estado del Presupuesto
     Route::patch('/budgets/{budget}/status', [BudgetController::class, 'updateStatus'])->name('budgets.status.update');
 
-   // Gemini IA
-   Route::post('/ai/analyze', [GeminiAIController::class, 'analyze'])->name('ai.analyze'); 
-    //IA Chat
-   Route::post('/ai/chat', [GeminiAssistantController::class, 'chat'])->name('ai.chat');
+    // Gemini IA
+    Route::post('/ai/analyze', [GeminiAIController::class, 'analyze'])->name('ai.analyze'); 
+    
+    // IA Chat Assistant
+    Route::post('/ai/chat', [GeminiAssistantController::class, 'chat'])->name('ai.chat');
 });
 
 require __DIR__.'/auth.php';

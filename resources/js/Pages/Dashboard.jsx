@@ -2,6 +2,7 @@ import React from 'react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link } from '@inertiajs/react';
 import { useTranslation } from '@/Hooks/useTranslation';
+import GeminiAssistantChat from '@/Components/GeminiAssistantChat';
 
 export default function Dashboard({ auth, stats, recentBudgets }) {
     const user = auth?.user;
@@ -71,6 +72,12 @@ export default function Dashboard({ auth, stats, recentBudgets }) {
                             {stats?.totalDrafts || 0}
                         </p>
                     </div>
+                </div>
+
+                {/* Chat IA */}
+                <div className="space-y-3">
+                    <h4 className="font-bold text-slate-700 text-sm">Prueba 3: Asistente con contexto de base de datos</h4>
+                    <GeminiAssistantChat />
                 </div>
 
                 {/* Accesos Rápidos */}
