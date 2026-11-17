@@ -25,14 +25,13 @@ class GeminiAssistantService
         }
 
         try {
-            // Verificamos las consultas a la base de datos
-            $pendingWorks = Work::where('user_id', $user->id)->where('status', 'pending')->count();
-            $completedWorks = Work::where('user_id', $user->id)->where('status', 'completed')->count();
+            // Consultamos los trabajos registrados por el usuario de forma segura
             $totalWorks = Work::where('user_id', $user->id)->count();
 
+            // O si tienes otra tabla o modelo para herramientas/recursos, puedes sumarlo aquí:
+            // $totalResources = \App\Models\Resource::where('user_id', $user->id)->count();
+
             $context = "Datos actuales en la base de datos para el usuario {$user->name}:
-            - Trabajos pendientes: {$pendingWorks}
-            - Trabajos completados: {$completedWorks}
             - Total de trabajos registrados: {$totalWorks}";
 
             $prompt = "Eres el asistente virtual experto de OficioApp. Utiliza estrictamente el siguiente contexto de la base de datos para responder a la consulta del usuario de forma amable, clara y profesional. No inventes datos que no estén aquí.
@@ -61,7 +60,6 @@ class GeminiAssistantService
 
         } catch (Exception $e) {
             Log::error('Gemini Assistant Exception: ' . $e->getMessage());
-            // Devolvemos el mensaje exacto para diagnosticar
             return 'Excepción capturada: ' . $e->getMessage();
         }
     }
