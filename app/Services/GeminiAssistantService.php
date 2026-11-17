@@ -15,7 +15,8 @@ class GeminiAssistantService
     public function __construct()
     {
         $this->apiKey = config('services.gemini.key');
-        $this->model = 'gemini-3.8-flash';
+        // Usamos el modelo oficial y estable
+        $this->model = 'gemini-1.5-flash';
     }
 
     public function askAssistant(string $query, $user): string
@@ -25,11 +26,7 @@ class GeminiAssistantService
         }
 
         try {
-            // Consultamos los trabajos registrados por el usuario de forma segura
             $totalWorks = Work::where('user_id', $user->id)->count();
-
-            // O si tienes otra tabla o modelo para herramientas/recursos, puedes sumarlo aquí:
-            // $totalResources = \App\Models\Resource::where('user_id', $user->id)->count();
 
             $context = "Datos actuales en la base de datos para el usuario {$user->name}:
             - Total de trabajos registrados: {$totalWorks}";
@@ -40,7 +37,8 @@ class GeminiAssistantService
 
             Pregunta del usuario: \"{$query}\"";
 
-            $response = Http::timeout(15)->post("https://generativelanguage.googleapis.com/v1beta/models/{$this->model}:generateContent?key={$this->apiKey}", [
+            // Aumentamos el timeout a 30 segundos para evitar cortes
+            $response = Http::timeout(30)->post("https://generativelanguage.googleapis.com/v1beta/models/{$this->model}:generateContent?key={$this->apiKey}", [
                 'contents' => [
                     [
                         'parts' => [
