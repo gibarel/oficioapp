@@ -14,11 +14,11 @@ class GeminiAssistantService
 
     public function __construct()
     {
-        // Intentamos leer de config o directamente de env() por si hay caché activa en el servidor
+        // Fallback robusto por si hay caché activa en el servidor
         $this->apiKey = config('services.gemini.key') ?: env('GEMINI_API_KEY');
         
-        // Actualizado a un modelo oficial y activo para evitar el error 404
-        $this->model = 'gemini-3.8-flash';
+        // Usamos el modelo estable y oficial que no da timeout
+        $this->model = 'gemini-1.5-flash';
     }
 
     public function askAssistant(string $query, $user): string
@@ -39,7 +39,6 @@ class GeminiAssistantService
 
             Pregunta del usuario: \"{$query}\"";
 
-            // Petición POST al endpoint oficial con el modelo actualizado
             $response = Http::timeout(30)->post("https://generativelanguage.googleapis.com/v1beta/models/{$this->model}:generateContent?key={$this->apiKey}", [
                 'contents' => [
                     [
