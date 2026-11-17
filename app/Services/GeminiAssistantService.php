@@ -15,7 +15,7 @@ class GeminiAssistantService
     public function __construct()
     {
         $this->apiKey = config('services.gemini.key');
-        $this->model = 'gemini-1.5-flash';
+        $this->model = 'gemini-2.5-flash';
     }
 
     public function askAssistant(string $query, $user): string
