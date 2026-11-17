@@ -52,6 +52,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
    // Gemini IA
    Route::post('/ai/analyze', [GeminiAIController::class, 'analyze'])->name('ai.analyze'); 
+    //IA Chat
+   Route::post('/ai/chat', [GeminiAssistantController::class, 'chat'])->name('ai.chat');
 });
 
 require __DIR__.'/auth.php';
