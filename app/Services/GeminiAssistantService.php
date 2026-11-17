@@ -25,6 +25,7 @@ class GeminiAssistantService
         }
 
         try {
+            // Verificamos las consultas a la base de datos
             $pendingWorks = Work::where('user_id', $user->id)->where('status', 'pending')->count();
             $completedWorks = Work::where('user_id', $user->id)->where('status', 'completed')->count();
             $totalWorks = Work::where('user_id', $user->id)->count();
@@ -52,7 +53,7 @@ class GeminiAssistantService
 
             if ($response->failed()) {
                 Log::error('Gemini API Error: ' . $response->body());
-                return 'Lo siento, la API de Gemini rechazó la consulta en este momento.';
+                return 'Error de API Gemini: ' . $response->body();
             }
 
             $result = $response->json();
@@ -60,7 +61,8 @@ class GeminiAssistantService
 
         } catch (Exception $e) {
             Log::error('Gemini Assistant Exception: ' . $e->getMessage());
-            return 'Ocurrió un error interno al conectar con el asistente inteligente.';
+            // Devolvemos el mensaje exacto para diagnosticar
+            return 'Excepción capturada: ' . $e->getMessage();
         }
     }
 }
