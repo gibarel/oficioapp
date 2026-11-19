@@ -3,9 +3,10 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, useForm } from '@inertiajs/react';
 import { useTranslation } from '@/Hooks/useTranslation';
 
-export default function Create({ auth, works = [] }) {
+export default function Create({ auth, works = [], clients = [] }) {
     const { t, locale } = useTranslation();
     const { data, setData, post, processing, errors } = useForm({
+        client_id: '',
         client_name: '',
         client_phone: '',
         client_address: '',
@@ -16,6 +17,27 @@ export default function Create({ auth, works = [] }) {
 
     const dateLocaleMap = { es: 'es-AR', pt: 'pt-BR', en: 'en-US' };
     const currentDateLocale = dateLocaleMap[locale] || 'es-AR';
+
+    const handleSelectClient = (e) => {
+        const selectedId = e.target.value;
+        if (!selectedId) {
+            setData('client_id', '');
+            return;
+        }
+
+        const found = (clients || []).find((c) => String(c.id) === String(selectedId));
+        if (found) {
+            setData((prev) => ({
+                ...prev,
+                client_id: found.id,
+                client_name: found.business_name
+                    ? `${found.name} (${found.business_name})`
+                    : found.name,
+                client_phone: found.phone || '',
+                client_address: found.address || '',
+            }));
+        }
+    };
 
     const handleAddWork = (e) => {
         const workId = e.target.value;
@@ -80,6 +102,27 @@ export default function Create({ auth, works = [] }) {
                     {/* Datos del Cliente */}
                     <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 space-y-4">
                         <h3 className="text-base font-bold text-slate-800">{t('budgets.clientData')}</h3>
+
+                        {Array.isArray(clients) && clients.length > 0 && (
+                            <div>
+                                <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">
+                                    Seleccionar cliente guardado
+                                </label>
+                                <select
+                                    value={data.client_id || ''}
+                                    onChange={handleSelectClient}
+                                    className="w-full rounded-xl border-slate-200 focus:border-slate-900 focus:ring-slate-900 text-sm bg-slate-50 font-medium text-slate-700"
+                                >
+                                    <option value="">— Cargar manualmente o elegir cliente —</option>
+                                    {clients.map((c) => (
+                                        <option key={c.id} value={c.id}>
+                                            {c.name}{c.business_name ? ` (${c.business_name})` : ''}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                        )}
+
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                             <div>
                                 <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">
