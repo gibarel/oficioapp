@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
+import { Head, router, useForm, usePage } from '@inertiajs/react';
 import { useTranslation } from '@/Hooks/useTranslation';
 
 const emptyForm = {
@@ -16,7 +16,7 @@ const emptyForm = {
 export default function Index({ auth, clients = [], filters = {} }) {
     const user = auth?.user;
     const { flash } = usePage().props;
-    const { t, locale } = useTranslation();
+    const { locale } = useTranslation();
 
     const dateLocaleMap = { es: 'es-AR', pt: 'pt-BR', en: 'en-US' };
     const currentDateLocale = dateLocaleMap[locale] || 'es-AR';
@@ -124,21 +124,13 @@ export default function Index({ auth, clients = [], filters = {} }) {
                         </p>
                     </div>
 
-                    <div className="w-full sm:w-auto flex items-center gap-2">
-                        <Link
-                            href={route('dashboard')}
-                            className="px-3.5 py-2.5 bg-white border border-slate-200 text-slate-700 text-sm font-semibold rounded-xl hover:bg-slate-50 transition"
-                        >
-                            ← Panel
-                        </Link>
-                        <button
-                            type="button"
-                            onClick={openCreateModal}
-                            className="flex-1 sm:flex-initial px-4 py-2.5 bg-slate-900 text-white text-sm font-semibold rounded-xl hover:bg-slate-800 transition shadow-sm"
-                        >
-                            + Nuevo cliente
-                        </button>
-                    </div>
+                    <button
+                        type="button"
+                        onClick={openCreateModal}
+                        className="w-full sm:w-auto px-4 py-2.5 bg-slate-900 text-white text-sm font-semibold rounded-xl hover:bg-slate-800 transition shadow-sm"
+                    >
+                        + Nuevo cliente
+                    </button>
                 </div>
             }
         >
