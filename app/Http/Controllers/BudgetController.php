@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Budget;
+use App\Models\Client;
 use App\Models\Work;
 use App\Services\BudgetCalculationService;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -30,20 +31,27 @@ class BudgetController extends Controller
         // Cargamos los trabajos con sus recursos asociados e inyectamos el precio unitario calculado por el servicio
         $works = auth()->user()->works()->with('resources')->orderBy('name')->get()->map(function ($work) use ($calculator) {
             $calculation = $calculator->calculateWorkCost($work);
-            
+
             // Asignamos dinámicamente el precio unitario sugerido (ya sea simple, intermedio o avanzado)
             $work->unit_price = $calculation['unit_price'];
             return $work;
         });
 
+        $clients = Client::where('user_id', auth()->id())
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->get(['id', 'name', 'business_name', 'phone', 'address']);
+
         return Inertia::render('Budgets/Create', [
             'works' => $works,
+            'clients' => $clients,
         ]);
     }
 
     public function store(Request $request, BudgetCalculationService $calculator)
     {
         $validated = $request->validate([
+            'client_id' => 'nullable|exists:clients,id',
             'client_name' => 'required|string|max:255',
             'client_phone' => 'nullable|string|max:50',
             'client_address' => 'nullable|string|max:255',
@@ -58,17 +66,24 @@ class BudgetController extends Controller
             'items.*.unit_price' => 'required|numeric|min:0',
         ]);
 
+        $clientId = null;
+        if (!empty($validated['client_id'])) {
+            $clientId = Client::where('id', $validated['client_id'])
+                ->where('user_id', $request->user()->id)
+                ->value('id');
+        }
+
         $subtotalCostTotal = 0;
         $contingencyTotal = 0;
         $profitTotal = 0;
         $grandTotal = 0;
-        
+
         $processedItemsData = [];
 
         foreach ($validated['items'] as $item) {
             $quantity = (float) $item['quantity'];
             $workId = $item['work_id'] ?? null;
-            
+
             $detailedCalculation = null;
 
             // Si el ítem está vinculado a un trabajo del catálogo, obtenemos su desglose exacto mediante el servicio
@@ -118,6 +133,7 @@ class BudgetController extends Controller
         $budget = $request->user()->budgets()->create([
             'uuid' => (string) Str::uuid(),
             'budget_number' => 'PRES-' . strtoupper(Str::random(8)),
+            'client_id' => $clientId,
             'client_name' => $validated['client_name'],
             'client_phone' => $validated['client_phone'] ?? null,
             'client_address' => $validated['client_address'] ?? null,
@@ -166,7 +182,7 @@ class BudgetController extends Controller
 
         // Eliminar los ítems asociados primero
         $budget->items()->delete();
-        
+
         // Eliminar el presupuesto
         $budget->delete();
 
