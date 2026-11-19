@@ -13,6 +13,7 @@ export default function AuthenticatedLayout({ header, children }) {
 
     const [showingNavigationDropdown, setShowingNavigationDropdown] = useState(false);
 
+    // 📊 Hook para registrar vistas de página dinámicas en Google Analytics (SPA)
     useEffect(() => {
         if (typeof window.gtag === 'function') {
             window.gtag('event', 'page_view', {
@@ -22,8 +23,9 @@ export default function AuthenticatedLayout({ header, children }) {
 
         const removeListener = router.on('finish', (event) => {
             if (typeof window.gtag === 'function') {
+                const pagePath = event?.detail?.page?.url || window.location.pathname;
                 window.gtag('event', 'page_view', {
-                    page_path: event.detail.page.url,
+                    page_path: pagePath,
                 });
             }
         });
@@ -33,9 +35,11 @@ export default function AuthenticatedLayout({ header, children }) {
 
     return (
         <div className="min-h-screen flex flex-col bg-slate-50">
+            {/* Navegación Minimalista */}
             <nav className="bg-white border-b border-slate-100 sticky top-0 z-40">
                 <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex justify-between h-16">
+                        {/* Logo y Enlaces Principales */}
                         <div className="flex items-center gap-8">
                             <Link href={route('dashboard')} className="flex items-center gap-2">
                                 <ApplicationLogo className="block h-8 w-auto fill-current text-slate-900" />
@@ -73,6 +77,7 @@ export default function AuthenticatedLayout({ header, children }) {
                             </div>
                         </div>
 
+                        {/* Menú de Usuario (Derecha) */}
                         <div className="hidden sm:flex sm:items-center sm:ms-6">
                             <div className="relative ms-3">
                                 <Dropdown>
@@ -102,6 +107,7 @@ export default function AuthenticatedLayout({ header, children }) {
                             </div>
                         </div>
 
+                        {/* Botón menú hamburguesa (Móvil) */}
                         <div className="-me-2 flex items-center sm:hidden">
                             <button
                                 onClick={() => setShowingNavigationDropdown((prev) => !prev)}
@@ -116,6 +122,7 @@ export default function AuthenticatedLayout({ header, children }) {
                     </div>
                 </div>
 
+                {/* Menú Desplegable para Móviles */}
                 <div className={(showingNavigationDropdown ? 'block' : 'hidden') + ' sm:hidden border-t border-slate-100 bg-white'}>
                     <div className="pt-2 pb-3 space-y-1 px-4">
                         <ResponsiveNavLink href={route('dashboard')} active={route().current('dashboard')}>
@@ -153,6 +160,7 @@ export default function AuthenticatedLayout({ header, children }) {
 
             <main className="flex-grow">{children}</main>
 
+            {/* Pie de página */}
             <footer className="pt-6 pb-20 sm:pb-8 text-center text-xs text-slate-400">
                 <div className="flex items-center justify-center gap-1.5">
                     <span className="text-slate-400">Desarrollado por</span>
