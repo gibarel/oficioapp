@@ -36,6 +36,7 @@ class GeminiAssistantService
             $prompt = "Eres el asistente virtual experto de OficioApp. Responde en español de forma amable, clara y concisa utilizando estrictamente los datos reales del contexto JSON.\n"
                 . "Reglas obligatorias:\n"
                 . "- No inventes datos, estados ni registros que no figuren en el JSON.\n"
+                . "- Al hablar de herramientas, materiales/insumos o mano de obra, ten en cuenta tanto los registros 'personal' como los precargados 'global' del sistema, aclarando su origen cuando corresponda.\n"
                 . "- Si en el modelo de trabajos no existe un campo de 'pendiente', acláralo con precisión y muestra los estados reales de presupuestos (budgets) o el detalle de trabajos disponibles.\n"
                 . "- Escribe siempre en texto plano, sin usar asteriscos dobles (**) ni formato Markdown.\n\n"
                 . "Contexto del usuario:\n"
@@ -87,8 +88,12 @@ class GeminiAssistantService
             ->orderByDesc('id')
             ->get(['id', 'name', 'calculation_method', 'reference_unit', 'base_price', 'is_template']);
 
-        // Resource ya aplica el scope available_for_user según auth()->id()
-        $resources = Resource::orderBy('type')
+        // Incluye explícitamente recursos personales (user_id = $user->id) y globales precargados (user_id IS NULL)
+        $resources = Resource::where(function ($q) use ($user) {
+                $q->where('user_id', $user->id)
+                    ->orWhereNull('user_id');
+            })
+            ->orderBy('type')
             ->orderBy('name')
             ->get([
                 'id',
@@ -102,6 +107,20 @@ class GeminiAssistantService
                 'hourly_depreciation_rate',
                 'is_sponsored',
             ]);
+
+        $resourcesConOrigen = $resources->map(function ($r) use ($user) {
+            return [
+                'id' => $r->id,
+                'nombre' => $r->name,
+                'tipo' => $r->type,
+                'origen' => is_null($r->user_id) ? 'global' : 'personal',
+                'unidad_uso' => $r->use_unit,
+                'valor_unitario' => $r->unit_value,
+                'unidad_compra' => $r->purchase_unit,
+                'costo_adquisicion' => $r->acquisition_cost,
+                'depreciacion_hora' => $r->hourly_depreciation_rate,
+            ];
+        });
 
         $budgets = Budget::where('user_id', $user->id)
             ->orderByDesc('id')
@@ -144,19 +163,16 @@ class GeminiAssistantService
                 ])->values()->toArray(),
             ],
             'recursos' => [
-                'total' => $resources->count(),
-                'por_tipo' => $resources->groupBy(fn ($r) => $r->type ?: 'sin_tipo')
+                'total_disponibles' => $resourcesConOrigen->count(),
+                'total_globales_precargados' => $resourcesConOrigen->where('origen', 'global')->count(),
+                'total_personales' => $resourcesConOrigen->where('origen', 'personal')->count(),
+                'por_tipo' => $resourcesConOrigen->groupBy(fn ($r) => $r['tipo'] ?: 'sin_tipo')
                     ->map->count()
                     ->toArray(),
-                'listado' => $resources->take(30)->map(fn ($r) => [
-                    'nombre' => $r->name,
-                    'tipo' => $r->type,
-                    'unidad_uso' => $r->use_unit,
-                    'valor_unitario' => $r->unit_value,
-                    'costo_adquisicion' => $r->acquisition_cost,
-                    'depreciacion_hora' => $r->hourly_depreciation_rate,
-                    'es_propio' => $r->user_id === $user->id,
-                ])->values()->toArray(),
+                'por_tipo_y_origen' => $resourcesConOrigen->groupBy(fn ($r) => ($r['tipo'] ?: 'sin_tipo') . ' (' . $r['origen'] . ')')
+                    ->map->count()
+                    ->toArray(),
+                'listado' => $resourcesConOrigen->take(60)->values()->toArray(),
             ],
             'presupuestos' => [
                 'total' => $budgets->count(),
