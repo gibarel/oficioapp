@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Budget;
+use App\Models\Client;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -17,6 +18,9 @@ class DashboardController extends Controller
         $totalIssued = $user->budgets()->count();
         $totalApproved = $user->budgets()->where('status', 'accepted')->count();
         $totalDrafts = $user->budgets()->where('status', 'draft')->count();
+        $activeClientsCount = Client::where('user_id', $user->id)
+            ->where('is_active', true)
+            ->count();
 
         // Monto total presupuestado acumulado
         $totalAmountSum = $user->budgets()->sum('total_price');
@@ -33,6 +37,7 @@ class DashboardController extends Controller
                 'totalApproved' => $totalApproved,
                 'totalDrafts' => $totalDrafts,
                 'totalAmountSum' => number_format($totalAmountSum, 2, '.', ''),
+                'activeClientsCount' => $activeClientsCount,
             ],
             'recentBudgets' => $recentBudgets,
         ]);

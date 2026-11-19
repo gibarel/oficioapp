@@ -11,6 +11,7 @@ export default function Dashboard({ auth, stats, recentBudgets }) {
 
     const dateLocaleMap = { es: 'es-AR', pt: 'pt-BR', en: 'en-US' };
     const currentDateLocale = dateLocaleMap[locale] || 'es-AR';
+    const activeClientsCount = Number(stats?.activeClientsCount || 0);
 
     return (
         <AuthenticatedLayout
@@ -92,7 +93,7 @@ export default function Dashboard({ auth, stats, recentBudgets }) {
                                 <p className="text-xs text-slate-400">
                                     {isChatOpen
                                         ? 'Toca para ocultar el asistente'
-                                        : 'Toca para consultar trabajos, recursos, presupuestos y finanzas'}
+                                        : 'Toca para consultar trabajos, recursos, presupuestos, clientes y finanzas'}
                                 </p>
                             </div>
                         </div>
@@ -110,7 +111,7 @@ export default function Dashboard({ auth, stats, recentBudgets }) {
                 </div>
 
                 {/* Accesos Rápidos */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                     <Link
                         href={route('budgets.create')}
                         className="p-4 bg-indigo-600 text-white rounded-2xl flex items-center justify-between hover:bg-indigo-700 transition shadow-sm"
@@ -120,6 +121,22 @@ export default function Dashboard({ auth, stats, recentBudgets }) {
                             <p className="text-xs text-indigo-100">{t('dashboard.createBudgetDesc')}</p>
                         </div>
                         <span className="text-xl font-bold">→</span>
+                    </Link>
+
+                    <Link
+                        href={route('clients.index')}
+                        className="p-4 bg-white border border-slate-100 rounded-2xl flex items-center justify-between hover:bg-slate-50 transition shadow-sm"
+                    >
+                        <div>
+                            <div className="flex items-center gap-2">
+                                <p className="font-bold text-sm text-slate-900">Clientes</p>
+                                <span className="text-[11px] font-mono font-bold px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700">
+                                    {activeClientsCount}
+                                </span>
+                            </div>
+                            <p className="text-xs text-slate-400">Agenda y contactos frecuentes</p>
+                        </div>
+                        <span className="text-lg text-slate-400">→</span>
                     </Link>
 
                     <Link

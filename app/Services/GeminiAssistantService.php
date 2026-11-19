@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Budget;
+use App\Models\Client;
 use App\Models\Expense;
 use App\Models\Income;
 use App\Models\Profile;
@@ -37,7 +38,7 @@ class GeminiAssistantService
 
             $prompt = "Eres el asistente virtual experto de OficioApp. Responde en español de forma amable, clara, directa y práctica.\n"
                 . "Reglas obligatorias:\n"
-                . "1. Datos reales del sistema: Usa estrictamente los datos del JSON para informar registros existentes (trabajos, recursos personales o globales precargados, presupuestos, finanzas). No inventes registros, precios ni estados que no figuren en el JSON.\n"
+                . "1. Datos reales del sistema: Usa estrictamente los datos del JSON para informar registros existentes (trabajos, recursos personales o globales precargados, presupuestos, finanzas, clientes). No inventes registros, precios ni estados que no figuren en el JSON.\n"
                 . "2. Lenguaje natural (sin tecnicismos internos): Nunca menciones IDs internos de base de datos (como 'id 27') ni nombres técnicos de columnas/códigos en inglés (traduce 'asset' como 'herramienta o equipo', 'material' como 'material/insumo', 'labor' como 'mano de obra', 'draft' como 'borrador/pendiente').\n"
                 . "3. Consultas técnicas o de cálculo no presentes en la BD: Cuando el usuario pregunte por rendimientos, cantidades estimadas o buenas prácticas del oficio (por ejemplo, cuánta pintura rinde en ciertos metros cuadrados), da primero una estimación orientativa útil basada en conocimiento general del rubro, vinculándola con los recursos o trabajos que tenga cargados si corresponde, y aclara brevemente que es una referencia orientativa y no un dato guardado en su catálogo ni la ficha técnica del fabricante.\n"
                 . "4. Pertinencia: Responde únicamente lo que el usuario preguntó. Solo menciona el estado de los presupuestos o que los trabajos del catálogo no tienen estado pendiente cuando el usuario pregunte explícitamente por pendientes, estados o presupuestos.\n"
@@ -183,6 +184,21 @@ class GeminiAssistantService
         $incomesTotal = (float) Income::where('user_id', $user->id)->sum('amount');
         $expensesTotal = (float) Expense::where('user_id', $user->id)->sum('amount');
 
+        $clients = Client::where('user_id', $user->id)
+            ->where('is_active', true)
+            ->withCount('budgets')
+            ->withSum('budgets', 'total_price')
+            ->orderBy('name')
+            ->get([
+                'id',
+                'name',
+                'business_name',
+                'phone',
+                'email',
+                'address',
+                'notes',
+            ]);
+
         return [
             'usuario' => [
                 'nombre' => $user->name,
@@ -231,6 +247,18 @@ class GeminiAssistantService
                 'ingresos_totales' => round($incomesTotal, 2),
                 'egresos_totales' => round($expensesTotal, 2),
                 'balance_ingresos_menos_egresos' => round($incomesTotal - $expensesTotal, 2),
+            ],
+            'clientes' => [
+                'total_activos' => $clients->count(),
+                'listado' => $clients->take(30)->map(fn ($c) => [
+                    'nombre' => $c->name,
+                    'negocio' => $c->business_name,
+                    'telefono' => $c->phone,
+                    'direccion' => $c->address,
+                    'notas' => $c->notes,
+                    'cantidad_presupuestos' => (int) ($c->budgets_count ?? 0),
+                    'monto_presupuestado' => round((float) ($c->budgets_sum_total_price ?? 0), 2),
+                ])->values()->toArray(),
             ],
         ];
     }
