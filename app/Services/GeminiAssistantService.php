@@ -37,18 +37,21 @@ class GeminiAssistantService
             $response = Http::withHeaders([
                 'Content-Type' => 'application/json',
                 'x-goog-api-key' => $this->apiKey,
-            ])->timeout(30)->post(
-                "https://generativelanguage.googleapis.com/v1beta/models/{$this->model}:generateContent",
-                [
-                    'contents' => [
-                        [
-                            'parts' => [
-                                ['text' => $prompt]
+            ])
+                ->connectTimeout(5)
+                ->timeout(10)
+                ->post(
+                    "https://generativelanguage.googleapis.com/v1beta/models/{$this->model}:generateContent",
+                    [
+                        'contents' => [
+                            [
+                                'parts' => [
+                                    ['text' => $prompt]
+                                ]
                             ]
                         ]
                     ]
-                ]
-            );
+                );
 
             if ($response->failed()) {
                 Log::error('Gemini API Error: ' . $response->body());
