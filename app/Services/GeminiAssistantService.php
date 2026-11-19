@@ -33,12 +33,12 @@ class GeminiAssistantService
             $contexto = $this->obtenerContextoUsuario($user);
             $contextJson = json_encode($contexto, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
 
-            $prompt = "Eres el asistente virtual experto de OficioApp. Responde en español de forma amable, clara y concisa utilizando estrictamente los datos reales del contexto JSON.\n"
+            $prompt = "Eres el asistente virtual experto de OficioApp. Responde en español de forma amable, clara, práctica y concisa.\n"
                 . "Reglas obligatorias:\n"
-                . "- No inventes datos, estados ni registros que no figuren en el JSON.\n"
-                . "- Al hablar de herramientas, materiales/insumos o mano de obra, ten en cuenta tanto los registros 'personal' como los precargados 'global' del sistema, aclarando su origen cuando corresponda.\n"
-                . "- Si en el modelo de trabajos no existe un campo de 'pendiente', acláralo con precisión y muestra los estados reales de presupuestos (budgets) o el detalle de trabajos disponibles.\n"
-                . "- Escribe siempre en texto plano, sin usar asteriscos dobles (**) ni formato Markdown.\n\n"
+                . "1. Datos reales del sistema: Usa estrictamente los datos del JSON para informar registros existentes (trabajos, recursos personales o globales precargados, presupuestos, finanzas). No inventes registros, precios ni estados que no figuren en el JSON.\n"
+                . "2. Consultas técnicas o de cálculo no presentes en la BD: Cuando el usuario pregunte por rendimientos, cantidades estimadas o buenas prácticas del oficio (por ejemplo, cuánta pintura rinde en ciertos metros cuadrados), sí podés dar una estimación orientativa útil basada en conocimiento general del rubro, vinculándola con los recursos que tenga cargados si corresponde, pero aclara siempre que es una estimación orientativa y no un dato guardado en su base de datos ni la ficha técnica exacta del fabricante.\n"
+                . "3. Estados y trabajos: Si en el modelo de trabajos no existe un campo de 'pendiente', acláralo solo cuando sea pertinente a la pregunta y muestra los estados reales de presupuestos.\n"
+                . "4. Formato: Escribe siempre en texto plano, sin usar asteriscos dobles (**) ni formato Markdown.\n\n"
                 . "Contexto del usuario:\n"
                 . "{$contextJson}\n\n"
                 . "Pregunta del usuario: \"{$query}\"";
@@ -108,7 +108,7 @@ class GeminiAssistantService
                 'is_sponsored',
             ]);
 
-        $resourcesConOrigen = $resources->map(function ($r) use ($user) {
+        $resourcesConOrigen = $resources->map(function ($r) {
             return [
                 'id' => $r->id,
                 'nombre' => $r->name,
