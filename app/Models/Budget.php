@@ -66,6 +66,11 @@ class Budget extends Model
 
     public function transactions(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
-    return $this->hasMany(Transaction::class);
+        return $this->hasMany(Transaction::class);
+    }
+
+    public function client(): BelongsTo
+    {
+        return $this->belongsTo(Client::class);
     }
 }

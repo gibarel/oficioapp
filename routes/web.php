@@ -4,6 +4,7 @@ use App\Http\Controllers\BudgetController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ResourceController;
 use App\Http\Controllers\WorkController;
+use App\Http\Controllers\ClientController;
 use App\Http\Controllers\PublicBudgetController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\TransactionController;
@@ -40,10 +41,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/transactions', [TransactionController::class, 'store'])->name('transactions.store');
     Route::delete('/transactions/{transaction}', [TransactionController::class, 'destroy'])->name('transactions.destroy');
 
-    // Módulos Principales (Trabajos, Insumos/Recursos con edición y Presupuestos)
+    // Módulos Principales (Trabajos, Insumos/Recursos con edición, Presupuestos, CLientes)
     Route::resource('works', WorkController::class);
     Route::resource('resources', ResourceController::class)->only(['index', 'store', 'update', 'destroy']);
     Route::resource('budgets', BudgetController::class);
+    Route::resource('clients', ClientController::class)->only(['index', 'store', 'update', 'destroy']);
     
     // PDF de Presupuestos
     Route::get('/budgets/{budget}/pdf', [BudgetController::class, 'downloadPdf'])->name('budgets.pdf');
