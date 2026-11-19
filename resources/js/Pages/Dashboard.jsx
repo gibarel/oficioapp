@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link } from '@inertiajs/react';
 import { useTranslation } from '@/Hooks/useTranslation';
@@ -7,6 +7,7 @@ import GeminiAssistantChat from '@/Components/GeminiAssistantChat';
 export default function Dashboard({ auth, stats, recentBudgets }) {
     const user = auth?.user;
     const { t, locale } = useTranslation();
+    const [isChatOpen, setIsChatOpen] = useState(false);
 
     const dateLocaleMap = { es: 'es-AR', pt: 'pt-BR', en: 'en-US' };
     const currentDateLocale = dateLocaleMap[locale] || 'es-AR';
@@ -34,7 +35,7 @@ export default function Dashboard({ auth, stats, recentBudgets }) {
             <Head title={t('dashboard.title')} />
 
             <div className="py-6 max-w-5xl mx-auto px-3 sm:px-6 lg:px-8 space-y-6">
-                
+
                 {/* Métricas Principales */}
                 <div className="grid grid-cols-2 gap-3">
                     <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-100 shadow-sm space-y-1">
@@ -74,10 +75,38 @@ export default function Dashboard({ auth, stats, recentBudgets }) {
                     </div>
                 </div>
 
-                {/* Chat IA */}
-                <div className="space-y-3">
-                    <h4 className="font-bold text-slate-700 text-sm">Prueba 3: Asistente con contexto de base de datos</h4>
-                    <GeminiAssistantChat />
+                {/* Chat IA Colapsable */}
+                <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+                    <button
+                        type="button"
+                        onClick={() => setIsChatOpen((prev) => !prev)}
+                        aria-expanded={isChatOpen}
+                        className="w-full px-4 py-3.5 sm:px-5 flex items-center justify-between text-left hover:bg-slate-50/80 transition"
+                    >
+                        <div className="flex items-center gap-2.5">
+                            <span className="inline-flex h-2.5 w-2.5 rounded-full bg-indigo-600" />
+                            <div>
+                                <h4 className="font-bold text-slate-800 text-sm">
+                                    Asistente Inteligente OficioApp
+                                </h4>
+                                <p className="text-xs text-slate-400">
+                                    {isChatOpen
+                                        ? 'Toca para ocultar el asistente'
+                                        : 'Toca para consultar trabajos, recursos, presupuestos y finanzas'}
+                                </p>
+                            </div>
+                        </div>
+
+                        <span className="text-xs font-semibold text-indigo-600 bg-indigo-50 px-3 py-1 rounded-full shrink-0">
+                            {isChatOpen ? 'Ocultar' : 'Abrir'}
+                        </span>
+                    </button>
+
+                    {isChatOpen && (
+                        <div className="p-3 sm:p-4 border-t border-slate-100 bg-slate-50/40">
+                            <GeminiAssistantChat />
+                        </div>
+                    )}
                 </div>
 
                 {/* Accesos Rápidos */}
