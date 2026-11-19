@@ -9,16 +9,13 @@ use Exception;
 
 class GeminiAssistantService
 {
-    protected $apiKey;
-    protected $model;
+    protected string $apiKey;
+    protected string $model;
 
     public function __construct()
     {
-        // Fallback robusto por si hay caché activa en el servidor
-        $this->apiKey = config('services.gemini.key') ?: env('GEMINI_API_KEY');
-        
-        // Usamos el modelo estable y oficial que no da timeout
-        $this->model = 'gemini-1.5-flash';
+        $this->apiKey = (string) (config('services.gemini.key') ?: env('GEMINI_API_KEY'));
+        $this->model = 'gemini-3.8-flash';
     }
 
     public function askAssistant(string $query, $user): string
@@ -30,24 +27,28 @@ class GeminiAssistantService
         try {
             $totalWorks = Work::where('user_id', $user->id)->count();
 
-            $context = "Datos actuales en la base de datos para el usuario {$user->name}:
-            - Total de trabajos registrados: {$totalWorks}";
+            $context = "Datos actuales en la base de datos para el usuario {$user->name}:\n"
+                . "- Total de trabajos registrados: {$totalWorks}";
 
-            $prompt = "Eres el asistente virtual experto de OficioApp. Utiliza estrictamente el siguiente contexto de la base de datos para responder a la consulta del usuario de forma amable, clara y profesional. No inventes datos que no estén aquí.
-            
-            {$context}
+            $prompt = "Eres el asistente virtual experto de OficioApp. Utiliza estrictamente el siguiente contexto de la base de datos para responder a la consulta del usuario de forma amable, clara y profesional. No inventes datos que no estén aquí.\n\n"
+                . "{$context}\n\n"
+                . "Pregunta del usuario: \"{$query}\"";
 
-            Pregunta del usuario: \"{$query}\"";
-
-            $response = Http::timeout(30)->post("https://generativelanguage.googleapis.com/v1beta/models/{$this->model}:generateContent?key={$this->apiKey}", [
-                'contents' => [
-                    [
-                        'parts' => [
-                            ['text' => $prompt]
+            $response = Http::withHeaders([
+                'Content-Type' => 'application/json',
+                'x-goog-api-key' => $this->apiKey,
+            ])->timeout(30)->post(
+                "https://generativelanguage.googleapis.com/v1beta/models/{$this->model}:generateContent",
+                [
+                    'contents' => [
+                        [
+                            'parts' => [
+                                ['text' => $prompt]
+                            ]
                         ]
                     ]
                 ]
-            ]);
+            );
 
             if ($response->failed()) {
                 Log::error('Gemini API Error: ' . $response->body());
@@ -56,7 +57,6 @@ class GeminiAssistantService
 
             $result = $response->json();
             return $result['candidates'][0]['content']['parts'][0]['text'] ?? 'No pude procesar una respuesta clara.';
-
         } catch (Exception $e) {
             Log::error('Gemini Assistant Exception: ' . $e->getMessage());
             return 'Excepción capturada: ' . $e->getMessage();
