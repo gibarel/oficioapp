@@ -15,7 +15,7 @@ class GeminiAssistantService
     public function __construct()
     {
         $this->apiKey = (string) (config('services.gemini.key') ?: env('GEMINI_API_KEY'));
-        $this->model = 'gemini-3.8-flash';
+        $this->model = 'gemini-3.1-flash-lite';
     }
 
     public function askAssistant(string $query, $user): string
@@ -34,23 +34,28 @@ class GeminiAssistantService
                 . "{$context}\n\n"
                 . "Pregunta del usuario: \"{$query}\"";
 
+            $payload = [
+                'contents' => [
+                    [
+                        'parts' => [
+                            ['text' => $prompt]
+                        ]
+                    ]
+                ]
+            ];
+
             $response = Http::withHeaders([
                 'Content-Type' => 'application/json',
                 'x-goog-api-key' => $this->apiKey,
             ])
-                ->connectTimeout(5)
-                ->timeout(10)
+                ->connectTimeout(10)
+                ->timeout(30)
+                ->retry(2, 500, function ($exception, $request) use (&$response) {
+                    return $response && $response->status() === 503;
+                }, throw: false)
                 ->post(
                     "https://generativelanguage.googleapis.com/v1beta/models/{$this->model}:generateContent",
-                    [
-                        'contents' => [
-                            [
-                                'parts' => [
-                                    ['text' => $prompt]
-                                ]
-                            ]
-                        ]
-                    ]
+                    $payload
                 );
 
             if ($response->failed()) {
