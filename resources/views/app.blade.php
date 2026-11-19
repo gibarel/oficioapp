@@ -4,7 +4,23 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
 
-        <title inertia>{{ config('app.name', 'Laravel') }}</title>
+        <!-- Favicon personalizado al inicio para que el navegador lo tome de inmediato -->
+        <link rel="icon" type="image/x-icon" href="/images/favicon.ico">
+        <link rel="shortcut icon" href="/images/favicon.ico">
+
+        <title>OficioApp</title>
+
+        <!-- Google tag (gtag.js) - GA4 -->
+        <script async src="https://www.googletagmanager.com/gtag/js?id=G-RJXBEGQJKX"></script>
+        <script>
+          window.dataLayer = window.dataLayer || [];
+          function gtag(){dataLayer.push(arguments);}
+          gtag('js', new Date());
+
+          gtag('config', 'G-RJXBEGQJKX', {
+            send_page_view: false
+          });
+        </script>
 
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">

@@ -1,90 +1,168 @@
 import React from 'react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head } from '@inertiajs/react';
-import Badge from '@/Components/Badge';
+import { Head, useForm, router } from '@inertiajs/react';
+import { useTranslation } from '@/Hooks/useTranslation';
 
 export default function Show({ auth, budget }) {
+    const { delete: destroy, processing } = useForm();
+    const { t, locale } = useTranslation();
 
-    // Generar enlace dinámico para WhatsApp
+    const dateLocaleMap = { es: 'es-AR', pt: 'pt-BR', en: 'en-US' };
+    const currentDateLocale = dateLocaleMap[locale] || 'es-AR';
+
+    const handleDelete = () => {
+        if (confirm(t('common.confirmDeleteBudget', { number: budget.budget_number }))) {
+            destroy(route('budgets.destroy', budget.id), {
+                onSuccess: () => {
+                    window.location.href = route('dashboard');
+                },
+            });
+        }
+    };
+
+    const handleStatusChange = (e) => {
+        const newStatus = e.target.value;
+        router.patch(route('budgets.status.update', budget.id), {
+            status: newStatus,
+        }, {
+            preserveScroll: true,
+        });
+    };
+
     const getWhatsAppShareUrl = () => {
-    const cleanPhone = budget.client_phone ? budget.client_phone.replace(/[^0-9]/g, '') : '';
-    const publicUrl = route('public.budgets.show', budget.uuid);
-    
-    const message = `Hola ${budget.client_name}, te adjunto el presupuesto *#${budget.budget_number}* por un total de *$${budget.total_price} ${budget.currency}*.\n\nPodés revisarlo y responder directamente desde este enlace:\n${publicUrl}`;
-    
-    return cleanPhone 
-        ? `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`
-        : `https://wa.me/?text=${encodeURIComponent(message)}`;
-};
+        const cleanPhone = budget.client_phone ? budget.client_phone.replace(/[^0-9]/g, '') : '';
+        const publicUrl = route('public.budgets.show', budget.uuid);
+        
+        const message = `Hola ${budget.client_name}, te adjunto el presupuesto *#${budget.budget_number}* por un total de *$${Number(budget.total_price || 0).toLocaleString(currentDateLocale)} ${budget.currency}*.\n\nPodés revisarlo y responder directamente desde este enlace:\n${publicUrl}`;
+        
+        return cleanPhone 
+            ? `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`
+            : `https://wa.me/?text=${encodeURIComponent(message)}`;
+    };
 
     return (
         <AuthenticatedLayout 
             user={auth.user} 
             header={
-                <div className="flex justify-between items-center">
-                    <h2 className="font-semibold text-xl text-slate-800 tracking-tight">
-                        Presupuesto #{budget.budget_number}
-                    </h2>
-                    <div className="flex gap-2">
-                        {/* Botón WhatsApp */}
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <div>
+                        <span className="text-xs uppercase tracking-wider text-indigo-600 font-bold bg-indigo-50 px-2.5 py-1 rounded-full">
+                            {t('budgets.detailBadge')}
+                        </span>
+                        <h2 className="font-bold text-2xl text-slate-800 leading-tight mt-1">
+                            {t('budgets.budgetTitle', { number: budget.budget_number })}
+                        </h2>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-2">
                         <a
                             href={getWhatsAppShareUrl()}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="px-4 py-2 bg-emerald-600 text-white rounded-xl text-sm font-medium hover:bg-emerald-700 transition flex items-center gap-1.5 shadow-sm"
+                            className="px-4 py-2 bg-emerald-600 text-white rounded-xl text-sm font-semibold hover:bg-emerald-500 transition flex items-center gap-1.5 shadow-sm"
                         >
-                            <span>WhatsApp</span>
+                            <span>{t('budgets.whatsappShare')}</span>
                         </a>
 
-                        {/* Botón Descargar PDF */}
                         <a
                             href={route('budgets.pdf', budget.id)}
                             target="_blank"
-                            className="px-4 py-2 bg-slate-900 text-white rounded-xl text-sm font-medium hover:bg-slate-800 transition flex items-center gap-1.5 shadow-sm"
+                            rel="noopener noreferrer"
+                            className="px-4 py-2 bg-slate-900 text-white rounded-xl text-sm font-semibold hover:bg-slate-800 transition flex items-center gap-1.5 shadow-sm"
                         >
-                            <span>Descargar PDF</span>
+                            <span>{t('budgets.downloadPdf')}</span>
                         </a>
+
+                        <button
+                            type="button"
+                            onClick={handleDelete}
+                            disabled={processing}
+                            className="px-4 py-2 bg-red-50 text-red-600 border border-red-200 rounded-xl text-sm font-semibold hover:bg-red-100 transition shadow-sm disabled:opacity-50"
+                        >
+                            {processing ? `🗑️ ${t('common.deleting')}` : `🗑️ ${t('common.delete')}`}
+                        </button>
                     </div>
                 </div>
             }
         >
-            <Head title={`Presupuesto ${budget.budget_number}`} />
+            <Head title={t('budgets.budgetTitle', { number: budget.budget_number })} />
 
-            <div className="py-8 max-w-3xl mx-auto px-4 sm:px-6">
-                <div className="bg-white p-6 sm:p-8 rounded-2xl border border-slate-100 shadow-sm space-y-6">
+            <div className="py-8 max-w-3xl mx-auto px-4 sm:px-6 space-y-6">
+                <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-100 shadow-sm space-y-6">
                     {/* Encabezado */}
-                    <div className="flex justify-between items-start border-b border-slate-100 pb-4">
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-100 pb-5">
                         <div>
-                            <span className="text-xs font-mono text-slate-400">#{budget.budget_number}</span>
-                            <h3 className="text-xl font-bold text-slate-900">{budget.client_name}</h3>
-                            <p className="text-xs text-slate-500 mt-0.5">
-                                Emisión: {new Date(budget.issued_at).toLocaleDateString()}
+                            <span className="text-xs font-mono font-bold text-slate-400">REF: #{budget.budget_number}</span>
+                            <h3 className="text-xl font-extrabold text-slate-900 mt-0.5">{budget.client_name}</h3>
+                            {budget.client_phone && (
+                                <p className="text-xs text-slate-500 mt-1">{t('common.phone')}: {budget.client_phone}</p>
+                            )}
+                            {budget.client_address && (
+                                <p className="text-xs text-slate-500">{t('common.address')}: {budget.client_address}</p>
+                            )}
+                            <p className="text-xs text-slate-400 mt-2">
+                                {t('common.emissionDate')}: {new Date(budget.issued_at || budget.created_at).toLocaleDateString(currentDateLocale)}
                             </p>
                         </div>
-                        <Badge variant={budget.status === 'accepted' ? 'success' : 'default'}>
-                            {budget.status}
-                        </Badge>
+
+                        {/* Selector interactivo de estado */}
+                        <div className="flex items-center gap-2">
+                            <span className="text-xs font-bold uppercase tracking-wider text-slate-400">{t('status.label')}:</span>
+                            <select
+                                value={budget.status}
+                                onChange={handleStatusChange}
+                                className={`text-xs font-bold uppercase py-1.5 px-3 rounded-xl border focus:ring-2 focus:ring-indigo-500 transition cursor-pointer ${
+                                    budget.status === 'accepted' ? 'bg-emerald-50 text-emerald-800 border-emerald-200' :
+                                    budget.status === 'rejected' ? 'bg-red-50 text-red-800 border-red-200' :
+                                    'bg-amber-50 text-amber-800 border-amber-200'
+                                }`}
+                            >
+                                <option value="draft">{t('status.draft')}</option>
+                                <option value="accepted">{t('status.accepted')}</option>
+                                <option value="rejected">{t('status.rejected')}</option>
+                            </select>
+                        </div>
                     </div>
 
-                    {/* Tabla simplificada de ítems */}
-                    <div className="divide-y divide-slate-100">
-                        {budget.items.map((item) => (
-                            <div key={item.id} className="py-3 flex justify-between items-center text-sm">
-                                <div>
-                                    <p className="font-medium text-slate-900">{item.work_name_snapshot}</p>
-                                    <p className="text-xs text-slate-400">Cant: {item.quantity} x ${item.unit_price}</p>
-                                </div>
-                                <span className="font-mono font-bold text-slate-900">${item.subtotal_price}</span>
-                            </div>
-                        ))}
+                    {/* Tabla de ítems */}
+                    <div className="space-y-3">
+                        <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">{t('budgets.budgetedItems')}</h4>
+                        <div className="divide-y divide-slate-100">
+                            {budget.items && budget.items.length > 0 ? (
+                                budget.items.map((item) => (
+                                    <div key={item.id} className="py-3.5 flex justify-between items-center text-sm">
+                                        <div>
+                                            <p className="font-semibold text-slate-900">{item.work_name_snapshot || item.description}</p>
+                                            <p className="text-xs text-slate-500 mt-0.5">
+                                                {t('common.quantity')}: {item.quantity} × ${Number(item.unit_price || 0).toLocaleString(currentDateLocale, { minimumFractionDigits: 2 })}
+                                            </p>
+                                        </div>
+                                        <span className="font-mono font-bold text-slate-900">
+                                            ${Number(item.subtotal_price || item.total_price || 0).toLocaleString(currentDateLocale, { minimumFractionDigits: 2 })}
+                                        </span>
+                                    </div>
+                                ))
+                            ) : (
+                                <p className="text-sm text-slate-400 py-4 text-center">{t('budgets.noItems')}</p>
+                            )}
+                        </div>
                     </div>
+
+                    {/* Condiciones */}
+                    {budget.execution_conditions && (
+                        <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 text-xs text-slate-600 space-y-1">
+                            <span className="font-bold uppercase tracking-wider text-slate-700 block">{t('common.conditions')}:</span>
+                            <p>{budget.execution_conditions}</p>
+                        </div>
+                    )}
 
                     {/* Resumen Total */}
                     <div className="pt-4 border-t border-slate-100 flex justify-end">
                         <div className="text-right space-y-1">
-                            <p className="text-xs text-slate-400">Total Presupuestado</p>
-                            <p className="text-2xl font-extrabold font-mono text-slate-900">
-                                ${budget.total_price} <span className="text-sm font-normal text-slate-500">{budget.currency}</span>
+                            <span className="text-xs text-slate-400 uppercase font-bold tracking-wider">{t('budgets.totalBudgeted')}</span>
+                            <p className="text-2xl sm:text-3xl font-black font-mono text-slate-900">
+                                ${Number(budget.total_price || 0).toLocaleString(currentDateLocale, { minimumFractionDigits: 2 })} 
+                                <span className="text-sm font-normal text-slate-500 ml-1.5">{budget.currency}</span>
                             </p>
                         </div>
                     </div>

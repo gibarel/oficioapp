@@ -16,7 +16,7 @@ class WorkController extends Controller
     {
         $works = $request->user()
             ->works()
-            ->withCount('resources')
+            ->with('resources')
             ->latest()
             ->get();
 
@@ -27,7 +27,8 @@ class WorkController extends Controller
 
     public function create(): Response
     {
-        $resources = auth()->user()->resources()->orderBy('name')->get();
+        // Usamos Resource::query() para evitar que la restricción de la relación del usuario oculte los recursos globales (user_id IS NULL)
+        $resources = Resource::orderBy('name')->get();
 
         return Inertia::render('Works/Create', [
             'resources' => $resources,
@@ -48,6 +49,7 @@ class WorkController extends Controller
             'resources' => 'array',
             'resources.*.id' => 'exists:resources,id',
             'resources.*.quantity' => 'required|numeric|min:0.01',
+            'resources.*.unit' => 'required|string|max:50', // 👈 Validación de la unidad dinámica
             'resources.*.custom_unit_value' => 'nullable|numeric|min:0',
             'resources.*.allocation_type' => 'required|in:direct,hourly_rate,percentage_share,fixed_estimate',
             'resources.*.allocation_value' => 'nullable|numeric|min:0',
@@ -70,13 +72,15 @@ class WorkController extends Controller
             foreach ($validated['resources'] as $res) {
                 $pivotData[$res['id']] = [
                     'quantity' => $res['quantity'],
+                    'unit' => $res['unit'] ?? 'u', // 👈 Guardamos la unidad elegida en la tabla pivote
                     'custom_unit_value' => $res['custom_unit_value'] ?? null,
                     'allocation_type' => $res['allocation_type'] ?? 'direct',
                     'allocation_value' => $res['allocation_value'] ?? null,
                     'is_client_provided' => $res['is_client_provided'] ?? false,
                 ];
             }
-            $work->resources()->attach($pivotData);
+            // Usamos sync en lugar de attach para guardar el array completo limpiamente
+            $work->resources()->sync($pivotData);
         }
 
         return redirect()->route('works.index')->with('success', 'Trabajo guardado correctamente.');
@@ -100,7 +104,9 @@ class WorkController extends Controller
         Gate::authorize('update', $work);
 
         $work->load('resources');
-        $availableResources = auth()->user()->resources()->orderBy('name')->get();
+        
+        // Cargamos todos los recursos disponibles (personales + globales)
+        $availableResources = Resource::orderBy('name')->get();
 
         return Inertia::render('Works/Edit', [
             'work' => $work,
@@ -124,6 +130,7 @@ class WorkController extends Controller
             'resources' => 'array',
             'resources.*.id' => 'exists:resources,id',
             'resources.*.quantity' => 'required|numeric|min:0.01',
+            'resources.*.unit' => 'required|string|max:50', // 👈 Validación de la unidad dinámica en actualización
             'resources.*.custom_unit_value' => 'nullable|numeric|min:0',
             'resources.*.allocation_type' => 'required|in:direct,hourly_rate,percentage_share,fixed_estimate',
             'resources.*.allocation_value' => 'nullable|numeric|min:0',
@@ -146,6 +153,7 @@ class WorkController extends Controller
             foreach ($validated['resources'] as $res) {
                 $pivotData[$res['id']] = [
                     'quantity' => $res['quantity'],
+                    'unit' => $res['unit'] ?? 'u', // 👈 Sincronizamos la unidad elegida
                     'custom_unit_value' => $res['custom_unit_value'] ?? null,
                     'allocation_type' => $res['allocation_type'] ?? 'direct',
                     'allocation_value' => $res['allocation_value'] ?? null,
