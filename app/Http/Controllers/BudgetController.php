@@ -28,11 +28,9 @@ class BudgetController extends Controller
 
     public function create(BudgetCalculationService $calculator): Response
     {
-        // Cargamos los trabajos con sus recursos asociados e inyectamos el precio unitario calculado por el servicio
         $works = auth()->user()->works()->with('resources')->orderBy('name')->get()->map(function ($work) use ($calculator) {
             $calculation = $calculator->calculateWorkCost($work);
 
-            // Asignamos dinámicamente el precio unitario sugerido (ya sea simple, intermedio o avanzado)
             $work->unit_price = $calculation['unit_price'];
             return $work;
         });
@@ -86,7 +84,6 @@ class BudgetController extends Controller
 
             $detailedCalculation = null;
 
-            // Si el ítem está vinculado a un trabajo del catálogo, obtenemos su desglose exacto mediante el servicio
             if ($workId) {
                 $work = $request->user()->works()->with('resources')->find($workId);
                 if ($work) {
@@ -94,7 +91,6 @@ class BudgetController extends Controller
                 }
             }
 
-            // Si no hay trabajo asociado o no se encontró, construimos un cálculo base
             if (!$detailedCalculation) {
                 $unitPrice = (float) $item['unit_price'];
                 $lineTotal = $quantity * $unitPrice;
@@ -129,7 +125,6 @@ class BudgetController extends Controller
             ];
         }
 
-        // Creamos el presupuesto consolidado con totales reales calculados
         $budget = $request->user()->budgets()->create([
             'uuid' => (string) Str::uuid(),
             'budget_number' => 'PRES-' . strtoupper(Str::random(8)),
@@ -147,7 +142,6 @@ class BudgetController extends Controller
             'issued_at' => now(),
         ]);
 
-        // Insertamos los ítems con su snapshot detallado
         foreach ($processedItemsData as $itemData) {
             $budget->items()->create($itemData);
         }
@@ -157,11 +151,63 @@ class BudgetController extends Controller
 
     public function show(Budget $budget): Response
     {
-        $budget->load('items');
+        if ($budget->user_id !== auth()->id()) {
+            abort(403, 'No autorizado.');
+        }
+
+        $budget->load(['items', 'incomes', 'expenses']);
 
         return Inertia::render('Budgets/Show', [
             'budget' => $budget,
         ]);
+    }
+
+    public function storeIncome(Request $request, Budget $budget)
+    {
+        if ($budget->user_id !== $request->user()->id) {
+            abort(403, 'No autorizado.');
+        }
+
+        $validated = $request->validate([
+            'concept' => 'required|string|max:255',
+            'amount' => 'required|numeric|min:0.01',
+            'payment_method' => 'nullable|string|max:100',
+            'income_date' => 'nullable|date',
+        ]);
+
+        $budget->incomes()->create([
+            'user_id' => $request->user()->id,
+            'concept' => $validated['concept'],
+            'amount' => $validated['amount'],
+            'payment_method' => $validated['payment_method'] ?? 'efectivo',
+            'income_date' => $validated['income_date'] ?? now()->toDateString(),
+        ]);
+
+        return back()->with('success', 'Cobro registrado en el presupuesto.');
+    }
+
+    public function storeExpense(Request $request, Budget $budget)
+    {
+        if ($budget->user_id !== $request->user()->id) {
+            abort(403, 'No autorizado.');
+        }
+
+        $validated = $request->validate([
+            'concept' => 'required|string|max:255',
+            'amount' => 'required|numeric|min:0.01',
+            'destination' => 'nullable|string|max:255',
+            'expense_date' => 'nullable|date',
+        ]);
+
+        $budget->expenses()->create([
+            'user_id' => $request->user()->id,
+            'concept' => $validated['concept'],
+            'amount' => $validated['amount'],
+            'destination' => $validated['destination'] ?? null,
+            'expense_date' => $validated['expense_date'] ?? now()->toDateString(),
+        ]);
+
+        return back()->with('success', 'Gasto registrado en el presupuesto.');
     }
 
     public function downloadPdf(Budget $budget)
@@ -175,24 +221,18 @@ class BudgetController extends Controller
 
     public function destroy(Budget $budget)
     {
-        // Validar que el presupuesto pertenezca al usuario autenticado
         if ($budget->user_id !== auth()->id()) {
             abort(403, 'No autorizado.');
         }
 
-        // Eliminar los ítems asociados primero
         $budget->items()->delete();
-
-        // Eliminar el presupuesto
         $budget->delete();
 
-        // Redirigir al dashboard en lugar de a budgets.index
         return redirect()->route('dashboard')->with('success', 'Presupuesto eliminado correctamente.');
     }
 
     public function updateStatus(Request $request, Budget $budget)
     {
-        // Validar que pertenezca al usuario
         if ($budget->user_id !== auth()->id()) {
             abort(403, 'No autorizado.');
         }

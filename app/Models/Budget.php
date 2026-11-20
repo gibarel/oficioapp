@@ -13,6 +13,7 @@ class Budget extends Model
     protected $fillable = [
         'uuid',
         'user_id',
+        'client_id',
         'budget_number',
         'client_name',
         'client_phone',

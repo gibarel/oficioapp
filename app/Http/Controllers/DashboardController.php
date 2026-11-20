@@ -2,8 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Budget;
 use App\Models\Client;
+use App\Models\Expense;
+use App\Models\Income;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -25,6 +26,15 @@ class DashboardController extends Controller
         // Monto total presupuestado acumulado
         $totalAmountSum = $user->budgets()->sum('total_price');
 
+        // Ganancia estimada en presupuestos aprobados
+        $approvedProfitSum = $user->budgets()
+            ->where('status', 'accepted')
+            ->sum('profit_amount');
+
+        // Cobros y gastos registrados por el usuario
+        $totalIncomesSum = Income::where('user_id', $user->id)->sum('amount');
+        $totalExpensesSum = Expense::where('user_id', $user->id)->sum('amount');
+
         // Presupuestos recientes (últimos 5)
         $recentBudgets = $user->budgets()
             ->orderBy('created_at', 'desc')
@@ -36,8 +46,11 @@ class DashboardController extends Controller
                 'totalIssued' => $totalIssued,
                 'totalApproved' => $totalApproved,
                 'totalDrafts' => $totalDrafts,
-                'totalAmountSum' => number_format($totalAmountSum, 2, '.', ''),
+                'totalAmountSum' => number_format((float) $totalAmountSum, 2, '.', ''),
                 'activeClientsCount' => $activeClientsCount,
+                'approvedProfitSum' => number_format((float) $approvedProfitSum, 2, '.', ''),
+                'totalIncomesSum' => number_format((float) $totalIncomesSum, 2, '.', ''),
+                'totalExpensesSum' => number_format((float) $totalExpensesSum, 2, '.', ''),
             ],
             'recentBudgets' => $recentBudgets,
         ]);
