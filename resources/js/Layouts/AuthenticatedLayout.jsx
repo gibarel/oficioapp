@@ -54,6 +54,13 @@ export default function AuthenticatedLayout({ header, children }) {
                                     {t('dashboard.title')}
                                 </NavLink>
                                 <NavLink
+                                    href={route('budgets.index')}
+                                    active={route().current('budgets.*')}
+                                    className="text-sm font-medium transition-colors"
+                                >
+                                    Presupuestos
+                                </NavLink>
+                                <NavLink
                                     href={route('clients.index')}
                                     active={route().current('clients.*')}
                                     className="text-sm font-medium transition-colors"
@@ -127,6 +134,9 @@ export default function AuthenticatedLayout({ header, children }) {
                     <div className="pt-2 pb-3 space-y-1 px-4">
                         <ResponsiveNavLink href={route('dashboard')} active={route().current('dashboard')}>
                             {t('dashboard.title')}
+                        </ResponsiveNavLink>
+                        <ResponsiveNavLink href={route('budgets.index')} active={route().current('budgets.*')}>
+                            Presupuestos
                         </ResponsiveNavLink>
                         <ResponsiveNavLink href={route('clients.index')} active={route().current('clients.*')}>
                             Clientes
